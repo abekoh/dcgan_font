@@ -1,0 +1,10 @@
+/bin/
+/include/
+/lib/
+/lib64/
+/pip-selfcheck.json
+/output*/
+/keras-dcgan/
+*.pkl
+*.pyc
+*.png
