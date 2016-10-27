@@ -4,6 +4,7 @@
 /lib64/
 /pip-selfcheck.json
 /output*/
+/test_output/
 /keras-dcgan/
 *.pkl
 *.pyc
