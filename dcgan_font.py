@@ -17,129 +17,32 @@ from chainer import Variable
 from chainer.utils import type_check
 from chainer import function
 
-import chainer.functions as F
-import chainer.links as L
+from chainer import functions as F
+from chainer import links as L
 
 from mylib.chainer import dataset
 from mylib.cv2_tools import display_img
 from mylib.tools import *
 from mylib.process_img.combine_imgs import combine_imgs
 
+import models
+
 def clip_img(x):
 	return np.float32(-1 if x<-1 else (1 if x>1 else x))
 
-# # 元論文ImageNet
-# class Generator(chainer.Chain):
-#     def __init__(self):
-#         super(Generator, self).__init__(
-#             fc5=L.Linear(100, 512 * 4 * 4),
-#             norm5=L.BatchNormalization(512 * 4 * 4),
-#             conv4=L.Deconvolution2D(512, 256, ksize=4, stride=2, pad=1),
-#             norm4=L.BatchNormalization(256),
-#             conv3=L.Deconvolution2D(256, 128, ksize=4, stride=2, pad=1),
-#             norm3=L.BatchNormalization(128),
-#             conv2=L.Deconvolution2D(128, 64,  ksize=4, stride=2, pad=1),
-#             norm2=L.BatchNormalization(64),
-#             conv1=L.Deconvolution2D(64, 1, ksize=4, stride=2, pad=1))
-#
-#     def __call__(self, z, test=False):
-#         n_sample = z.data.shape[0]
-#         h = F.relu(self.norm5(self.fc5(z), test=test))
-#         h = F.reshape(h, (n_sample, 512, 4, 4))
-#         h = F.relu(self.norm4(self.conv4(h), test=test))
-#         h = F.relu(self.norm3(self.conv3(h), test=test))
-#         h = F.relu(self.norm2(self.conv2(h), test=test))
-#         x = F.tanh(self.conv1(h))
-#         return x
-
-class Discriminator(chainer.Chain):
-    def __init__(self):
-        super(Discriminator, self).__init__(
-            conv1=L.Convolution2D(1,   64,  ksize=4, stride=2, pad=1),
-            conv2=L.Convolution2D(64,  128, ksize=4, stride=2, pad=1),
-            norm2=L.BatchNormalization(128),
-            conv3=L.Convolution2D(128, 256, ksize=4, stride=2, pad=1),
-            norm3=L.BatchNormalization(256),
-            conv4=L.Convolution2D(256, 512, ksize=4, stride=2, pad=1),
-            norm4=L.BatchNormalization(512),
-            fc5=L.Linear(512 * 4 * 4, 2))
-
-    def __call__(self, x, test=False):
-        n_sample = x.data.shape[0]
-        h = F.leaky_relu(self.conv1(x))
-        h = F.leaky_relu(self.norm2(self.conv2(h), test=test))
-        h = F.leaky_relu(self.norm3(self.conv3(h), test=test))
-        h = F.leaky_relu(self.norm4(self.conv4(h), test=test))
-        y = self.fc5(h)
-        return y
-
-# Keras版MNIST
-# class Generator(chainer.Chain):
-#     def __init__(self):
-#         super(Generator, self).__init__(
-#             fc1 = L.Linear(100, 1024),
-#             fc2 = L.Linear(1024, 128*16*16),
-#             norm2 = L.BatchNormalization(128*16*16),
-#             conv3 = L.Deconvolution2D(128, 64, ksize=4, stride=1, pad=1),
-#             conv4 = L.Deconvolution2D(64, 1, ksize=4, stride=1, pad=1))
-#
-#     def __call__(self, z, test=False):
-#         h = F.tanh(self.fc1(z))
-#         h = F.tanh(self.norm2(self.fc2(h), test=test))
-#         h = F.reshape(h, (100, 128, 16, 16))
-#         h = F.tanh(self.conv3(F.unpooling_2d(h, ksize=2)))
-#         x = F.tanh(self.conv4(F.unpooling_2d(h, ksize=2)))
-#         return x
-#
-# class Discriminator(chainer.Chain):
-#     def __init__(self):
-#         super(Discriminator, self).__init__(
-#             conv1 = L.Convolution2D(1, 64, ksize=4, stride=1, pad=1),
-#             conv2 = L.Convolution2D(64, 128, ksize=4, stride=1, pad=1),
-#             fc3 = L.Linear(128*16*16, 1024),
-#             fc4 = L.Linear(1024, 1))
-#
-#     def __call__(self, x, test=False):
-#         h = F.max_pooling_2d(F.tanh(self.conv1(x)), ksize=2)
-#         h = F.max_pooling_2d(F.tanh(self.conv2(h)), ksize=2)
-#         h = F.tanh(self.fc3(h))
-#         y = F.sigmoid(self.fc4(h))
-#         return y
-
-class Generator(chainer.Chain):
-    def __init__(self):
-        super(Generator, self).__init__(
-            fc5=L.Linear(100, 512 * 4 * 4),
-            norm5=L.BatchNormalization(512 * 4 * 4),
-            conv4=L.Deconvolution2D(512, 256, ksize=4, stride=2, pad=1),
-            norm4=L.BatchNormalization(256),
-            conv3=L.Deconvolution2D(256, 128, ksize=4, stride=2, pad=1),
-            norm3=L.BatchNormalization(128),
-            conv2=L.Deconvolution2D(128, 64,  ksize=4, stride=2, pad=1),
-            norm2=L.BatchNormalization(64),
-            conv1=L.Deconvolution2D(64, 1, ksize=4, stride=2, pad=1))
-
-    def __call__(self, z, test=False):
-        n_sample = z.data.shape[0]
-        h = F.relu(self.norm5(self.fc5(z), test=test))
-        h = F.reshape(h, (n_sample, 512, 4, 4))
-        h = F.relu(self.norm4(self.conv4(h), test=test))
-        h = F.relu(self.norm3(self.conv3(h), test=test))
-        h = F.relu(self.norm2(self.conv2(h), test=test))
-        x = F.sigmoid(self.conv1(h))
-        return x
-
-
 def train(train_txt_path, dst_dir_path):
+    epoch_n = 1000
     batch_size=100
 
     org_imgs = dataset.filelist_to_list_for_dcgan(train_txt_path)
-    
+
+    make_dir(dst_dir_path + 'pic/')
+
     xp = cuda.cupy
     cuda.get_device(0).use()
 
-    generator = Generator()
-    discriminator = Discriminator()
+    generator = models.Generator()
+    discriminator = models.Discriminator()
     generator.to_gpu()
     discriminator.to_gpu()
 
@@ -152,12 +55,12 @@ def train(train_txt_path, dst_dir_path):
     g_opt.add_hook(chainer.optimizer.WeightDecay(0.00001))
     d_opt.add_hook(chainer.optimizer.WeightDecay(0.00001))
 
-    for epoch in range(100):
+    for epoch_i in range(epoch_n):
         sum_g_loss = np.float32(0)
         sum_d_loss = np.float32(0)
-        print ('epoch: {0}/100'.format(epoch))
-        for index in range(int(org_imgs.shape[0]/batch_size)):
-            print ('batch: {0}/{1}'.format(index, int(org_imgs.shape[0]/batch_size)))
+        batch_n = int(org_imgs.shape[0]/batch_size)
+        for batch_i in range(batch_n):
+            print ('epoch:{0}/{1}, batch:{2}/{3}'.format(epoch_i, epoch_n, batch_i, batch_n))
             z = Variable(xp.random.uniform(-1, 1, (batch_size, 100), dtype=np.float32))
             generated_imgs = generator(z)
             generated_d_score = discriminator(generated_imgs)
@@ -165,8 +68,8 @@ def train(train_txt_path, dst_dir_path):
             g_loss = F.softmax_cross_entropy(generated_d_score, Variable(xp.zeros(batch_size, dtype=np.int32)))
             d_loss = F.softmax_cross_entropy(generated_d_score, Variable(xp.ones(batch_size, dtype=np.int32))) 
             batched_org_imgs = np.zeros((batch_size, 1, 64, 64), dtype=np.float32)
-            for i, j in enumerate(range(index*batch_size, (index+1)*batch_size)):
-                batched_org_imgs[i, :, :, :] = (org_imgs[j] - 128.0)/128.0
+            for i, j in enumerate(range(batch_i*batch_size, (batch_i+1)*batch_size)):
+                batched_org_imgs[i, :, :, :] = (org_imgs[j] - 127.5)/127.5
             batched_org_imgs = Variable(cuda.to_gpu(batched_org_imgs))
             original_d_score = discriminator(batched_org_imgs)
             d_loss += F.softmax_cross_entropy(original_d_score, Variable(xp.zeros(batch_size, dtype=np.int32)))
@@ -182,12 +85,12 @@ def train(train_txt_path, dst_dir_path):
             g_loss_data = g_loss.data.get()
             d_loss_data = d_loss.data.get()
 
-            print('g_loss: {0}, d_loss: {1}'.format(g_loss_data, d_loss_data))
+            print('g_loss:{0}, d_loss:{1}'.format(g_loss_data, d_loss_data))
 
             sum_g_loss += g_loss_data
             sum_d_loss += d_loss_data
 
-            if index % 20 == 0:
+            if batch_i % 200 == 0:
                 z = Variable(xp.random.uniform(-1, 1, (100, 100), dtype=np.float32))
                 generated_imgs = generator(z, test=True)
                 generated_imgs = generated_imgs.data.get()
@@ -197,20 +100,35 @@ def train(train_txt_path, dst_dir_path):
                 combined_img = combine_imgs(g_imgs, 10)
                 combined_img = combined_img*127.5 + 127.5
                 combined_img = combined_img.astype(np.int32)
-                cv2.imwrite('{0}pic/vis_{1}_{2}.png'.format(dst_dir_path, epoch, index), combined_img)
+                cv2.imwrite('{0}pic/{1}_{2}.png'.format(dst_dir_path, epoch_i, batch_i), combined_img)
+        if epoch_i % 50 == 0 and epoch_i != 0:
+            serializers.save_hdf5("{0}dcgan_model_dis_{1}.hdf5".format(dst_dir_path, epoch_i),discriminator)
+            serializers.save_hdf5("{0}dcgan_model_gen_{1}.hdf5".format(dst_dir_path, epoch_i),generator)
+            serializers.save_hdf5("{0}dcgan_state_dis_{1}.hdf5".format(dst_dir_path, epoch_i),d_opt)
+            serializers.save_hdf5("{0}dcgan_state_gen_{1}.hdf5".format(dst_dir_path, epoch_i),g_opt)
 
-
-        serializers.save_hdf5("{0}dcgan_model_dis_{1}.hdf5".format(dst_dir_path, epoch),discriminator)
-        serializers.save_hdf5("{0}dcgan_model_gen_{1}.hdf5".format(dst_dir_path, epoch),generator)
-        serializers.save_hdf5("{0}dcgan_state_dis_{1}.hdf5".format(dst_dir_path, epoch),d_opt)
-        serializers.save_hdf5("{0}dcgan_state_gen_{1}.hdf5".format(dst_dir_path, epoch),g_opt)
-        print ('epoch end', epoch, sum_d_loss, sum_g_loss)
-
+def generate(generator_hdf5_path):
+    xp = np
+    generator = models.Generator()
+    serializers.load_hdf5(generator_hdf5_path, generator)
+    z = (xp.random.uniform(-1, 1, (100, 100)).astype(np.float32))
+    z = Variable(z)
+    generated_imgs = generator(z, test=True)
+    generated_imgs = generated_imgs.data
+    g_imgs = []
+    for g_img in generated_imgs:
+        g_imgs.append(g_img[0])
+    combined_img = combine_imgs(g_imgs, 10)
+    combined_img = combined_img*127.5 + 127.5
+    combined_img = combined_img.astype(np.int32)
+    cv2.imwrite('generated.png', combined_img)
+    display_img(combined_img)
 
 def debug():
-    train_txt_path = '/home/abe/font_dataset/png_6628_64x64/all_1000.txt'
-    train(train_txt_path, '/home/abe/dcgan_font/test_output/')
-
+    train_txt_path = '/home/abe/font_dataset/png_6628_64x64/alph_list/all_A.txt'
+    train(train_txt_path, make_date_dir('/home/abe/dcgan_font/output/debug/'))
+    # generate('/home/abe/dcgan_font/output/A_likeMNIST/dcgan_model_gen_80.hdf5')
 
 if __name__ == '__main__':
     debug()
+
