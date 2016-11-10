@@ -2,7 +2,7 @@
 from __future__ import print_function
 import argparse
 from keras.optimizers import SGD
-from mylib.keras.networks.lenet import LeNet
+from mylib.keras.networks.lenet import LeNet2
 from mylib.keras import dataset
 
 def train_model(train_txt_path, test_txt_path):
@@ -10,7 +10,7 @@ def train_model(train_txt_path, test_txt_path):
 
     print('compiling model...')
     opt = SGD(lr=0.01)
-    model = LeNet.build(width=64, height=64, depth=1, classes=26, weight_path=None)
+    model = LeNet2.build(width=64, height=64, depth=1, classes=26, weight_path=None)
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
     print('training...')

@@ -207,3 +207,33 @@ class Discriminator(chainer.Chain):
         h = F.tanh(self.fc4(h))
         y = F.sigmoid(self.fc5(h))
         return y
+
+
+class Classificator(chainer.Chain):
+    '''
+    AlexNetを参考に
+    '''
+    def __init__(self):
+        super(Classificator, self).__init__(
+            conv1=L.Convolution2D(1,  96, 8, stride=4),
+            conv2=L.Convolution2D(96, 256,  5, pad=2),
+            conv3=L.Convolution2D(256, 384,  3, pad=1),
+            conv4=L.Convolution2D(384, 384,  3, pad=1),
+            conv5=L.Convolution2D(384, 256,  3, pad=1),
+            fc6=L.Linear(256, 4096),
+            fc7=L.Linear(4096, 4096),
+            fc8=L.Linear(4096, 26),
+        )
+
+    def __call__(self, x, train=True):
+        h = F.max_pooling_2d(F.local_response_normalization(
+            F.relu(self.conv1(x))), 3, stride=2)
+        h = F.max_pooling_2d(F.local_response_normalization(
+            F.relu(self.conv2(h))), 3, stride=2)
+        h = F.relu(self.conv3(h))
+        h = F.relu(self.conv4(h))
+        h = F.max_pooling_2d(F.relu(self.conv5(h)), 3, stride=2)
+        h = F.dropout(F.relu(self.fc6(h)), train=train)
+        h = F.dropout(F.relu(self.fc7(h)), train=train)
+        y = self.fc8(h)
+        return y
