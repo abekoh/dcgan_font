@@ -6,6 +6,8 @@
 /output*/
 /test_output/
 /keras-dcgan/
+/__pycache__/
+/generated/
 *.pkl
 *.pyc
 *.png

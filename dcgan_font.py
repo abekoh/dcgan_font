@@ -17,7 +17,7 @@ from mylib.process_img.combine_imgs import combine_imgs
 import models
 
 
-def save_log_file(var_names, var_values, dst_txt_path):
+def save_log_file(var_names, var_values, dst_txt_path): 
     with open(dst_txt_path, 'w') as log_file:
         for name, value in zip(var_names, var_values):
             tmp = name + '=' + str(value) + '\n'
@@ -26,13 +26,14 @@ def save_log_file(var_names, var_values, dst_txt_path):
 def train(train_txt_path, classificator_hdf5_path, dst_dir_path, 
           generator=models.Generator(), discriminator=models.Discriminator(), 
           classificator=models.Classificator(), 
-          epoch_n=1000, batch_size=100, pic_interval=200, save_models_interval=50, 
+          epoch_n=10000, batch_size=50, pic_interval=200, save_models_interval=250, 
           adam_alpha=0.0002, adam_beta1=0.5, weight_decay=0.00001):
     org_imgs = dataset.filelist_to_list_for_dcgan(train_txt_path)
 
-    log_values = [generator, discriminator, epoch_n, batch_size, adam_alpha, adam_beta1, weight_decay]
+    log_values = [generator, discriminator, classificator, classificator_hdf5_path, epoch_n, batch_size, adam_alpha, adam_beta1, weight_decay]
     save_log_file(tools.get_vars_names(log_values, locals()), log_values, dst_dir_path + 'log.txt')
     shutil.copy('./models.py', dst_dir_path + 'models.py')
+    shutil.copy('./dcgan_font.py', dst_dir_path + 'dcgan_font.py')
 
     tools.make_dir(dst_dir_path + 'pic/')
 
@@ -71,8 +72,11 @@ def train(train_txt_path, classificator_hdf5_path, dst_dir_path,
             d_loss = F.softmax_cross_entropy(
                 generated_d_score, Variable(xp.ones(batch_size, dtype=np.int32)))
             generated_c_score = classificator(generated_imgs)
-            g_loss += F.softmax_cross_entropy(
+            g_loss += 0.01 * F.softmax_cross_entropy(
                 generated_c_score, Variable(xp.zeros(batch_size, dtype=np.int32)))
+            acc = F.accuracy(
+                generated_c_score, Variable(xp.zeros(batch_size, dtype=np.int32)))
+            print(acc.data)
 
             # original_imgsで学習
             batched_org_imgs = np.zeros(
@@ -113,7 +117,7 @@ def train(train_txt_path, classificator_hdf5_path, dst_dir_path,
                 combined_img = combined_img.astype(np.int32)
                 cv2.imwrite('{0}pic/{1}_{2}.png'.format(dst_dir_path,
                                                         epoch_i, batch_i), combined_img)
-        if epoch_i % save_models_interval == 0 and epoch_i != 0:
+        if (epoch_i % save_models_interval == 0 and epoch_i != 0) or epoch_i == epoch_n - 1:
             serializers.save_hdf5("{0}dcgan_model_dis_{1}.hdf5".format(
                 dst_dir_path, epoch_i), discriminator)
             serializers.save_hdf5("{0}dcgan_model_gen_{1}.hdf5".format(
@@ -124,7 +128,7 @@ def train(train_txt_path, classificator_hdf5_path, dst_dir_path,
                 dst_dir_path, epoch_i), g_opt)
 
 
-def generate(generator_hdf5_path):
+def generate_10x10(generator_hdf5_path):
     xp = np
     generator = models.Generator()
     serializers.load_hdf5(generator_hdf5_path, generator)
@@ -139,15 +143,28 @@ def generate(generator_hdf5_path):
     combined_img = combined_img * 127.5 + 127.5
     combined_img = combined_img.astype(np.int32)
     cv2.imwrite('generated.png', combined_img)
-    display_img(combined_img)
 
+def generate_1(generator_hdf5_path, num=10):
+    xp = np
+    generator = models.Generator()
+    serializers.load_hdf5(generator_hdf5_path, generator)
+    for i in range(num):
+        z = (xp.random.uniform(-1, 1, (1, 100)).astype(np.float32))
+        z = Variable(z)
+        generated_imgs = generator(z, test=True)
+        generated_imgs = generated_imgs.data
+        generated_img = generated_imgs[0][0]
+        generated_img = generated_img * 127.5 + 127.5
+        generated_img = generated_img.astype(np.int32)
+        cv2.imwrite('generated/generated_' + str(i) + '.png', generated_img)
 
 def debug():
-    train_txt_path = '/home/abe/font_dataset/png_6628_64x64/alph_list/all_A.txt'
+    train_txt_path = '/home/abe/font_dataset/png_selected_184_64x64/alph_list/all_A.txt'
     classificator_hdf5_path = '/home/abe/dcgan_font/classificator_alex.hdf5'
     train(train_txt_path, classificator_hdf5_path, tools.make_date_dir(
         '/home/abe/dcgan_font/output/debug/'))
-    # generate('/home/abe/dcgan_font/output/A_likeMNIST/dcgan_model_gen_80.hdf5')
+    # generate_1('/home/abe/dcgan_font/output/+classificator_0.01/dcgan_model_gen_950.hdf5', 100)
+
 
 if __name__ == '__main__':
     debug()

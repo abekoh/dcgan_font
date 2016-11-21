@@ -194,9 +194,9 @@ class Generator(chainer.Chain):
 class Discriminator(chainer.Chain):
     def __init__(self):
         super(Discriminator, self).__init__(
-            conv1 = L.Convolution2D(1, 64, ksize=4, stride=1, pad=1),
-            conv2 = L.Convolution2D(64, 128, ksize=4, stride=1, pad=1),
-            conv3 = L.Convolution2D(128, 256, ksize=4, stride=1, pad=1),
+            conv1 = L.Convolution2D(1, 64, ksize=4, stride=1, pad=1), # -> 32*32
+            conv2 = L.Convolution2D(64, 128, ksize=4, stride=1, pad=1), # -> 16*16
+            conv3 = L.Convolution2D(128, 256, ksize=4, stride=1, pad=1), # -> 8*8
             fc4 = L.Linear(256*8*8, 1024),
             fc5 = L.Linear(1024, 2))
 
