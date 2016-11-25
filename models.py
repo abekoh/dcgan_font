@@ -213,7 +213,10 @@ class Classifier(chainer.Chain):
     '''
     AlexNetを参考に
     '''
-    def __init__(self):
+    def __init__(self, noise=False):
+        class_n = 26
+        if noise:
+            class_n += 1
         super(Classifier, self).__init__(
             conv1=L.Convolution2D(1,  96, 8, stride=4),
             conv2=L.Convolution2D(96, 256,  5, pad=2),
@@ -222,7 +225,7 @@ class Classifier(chainer.Chain):
             conv5=L.Convolution2D(384, 256,  3, pad=1),
             fc6=L.Linear(256, 4096),
             fc7=L.Linear(4096, 4096),
-            fc8=L.Linear(4096, 26),
+            fc8=L.Linear(4096, class_n),
         )
 
     def __call__(self, x, train=True):

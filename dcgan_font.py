@@ -159,10 +159,10 @@ def generate_1(generator_hdf5_path, num=10):
         cv2.imwrite('generated/generated_' + str(i) + '.png', generated_img)
 
 def debug():
-    train_txt_path = '/home/abe/font_dataset/png_selected_184_64x64/alph_list/all_A.txt'
-    classifier_hdf5_path = '/home/abe/dcgan_font/classifier_alex.hdf5'
+    train_txt_path = '/home/abe/font_dataset/png_clustered_1000_64x64/500clust/alph_list/all_A.txt'
+    classifier_hdf5_path = '/home/abe/dcgan_font/classificator_alex_27class.hdf5'
     train(train_txt_path, classifier_hdf5_path, tools.make_date_dir(
-        '/home/abe/dcgan_font/output/debug/'))
+        '/home/abe/dcgan_font/output/debug/'), classifier=models.Classifier(noise=True))
     # generate_1('/home/abe/dcgan_font/output/+classifier_0.01/dcgan_model_gen_950.hdf5', 100)
 
 
