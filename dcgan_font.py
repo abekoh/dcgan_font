@@ -23,14 +23,14 @@ def save_log_file(var_names, var_values, dst_txt_path):
             tmp = name + '=' + str(value) + '\n'
             log_file.write(tmp)
 
-def train(train_txt_path, classificator_hdf5_path, dst_dir_path, 
+def train(train_txt_path, classifier_hdf5_path, dst_dir_path, 
           generator=models.Generator(), discriminator=models.Discriminator(), 
-          classificator=models.Classificator(), 
+          classifier=models.Classifier(), 
           epoch_n=10000, batch_size=50, pic_interval=200, save_models_interval=250, 
           adam_alpha=0.0002, adam_beta1=0.5, weight_decay=0.00001):
     org_imgs = dataset.filelist_to_list_for_dcgan(train_txt_path)
 
-    log_values = [generator, discriminator, classificator, classificator_hdf5_path, epoch_n, batch_size, adam_alpha, adam_beta1, weight_decay]
+    log_values = [generator, discriminator, classifier, classifier_hdf5_path, epoch_n, batch_size, adam_alpha, adam_beta1, weight_decay]
     save_log_file(tools.get_vars_names(log_values, locals()), log_values, dst_dir_path + 'log.txt')
     shutil.copy('./models.py', dst_dir_path + 'models.py')
     shutil.copy('./dcgan_font.py', dst_dir_path + 'dcgan_font.py')
@@ -42,9 +42,9 @@ def train(train_txt_path, classificator_hdf5_path, dst_dir_path,
 
     generator.to_gpu()
     discriminator.to_gpu()
-    classificator.to_gpu()
+    classifier.to_gpu()
 
-    serializers.load_hdf5(classificator_hdf5_path, classificator)
+    serializers.load_hdf5(classifier_hdf5_path, classifier)
 
     g_opt = optimizers.Adam(alpha=adam_alpha, beta1=adam_beta1)
     d_opt = optimizers.Adam(alpha=adam_alpha, beta1=adam_beta1)
@@ -71,7 +71,7 @@ def train(train_txt_path, classificator_hdf5_path, dst_dir_path,
                 generated_d_score, Variable(xp.zeros(batch_size, dtype=np.int32)))
             d_loss = F.softmax_cross_entropy(
                 generated_d_score, Variable(xp.ones(batch_size, dtype=np.int32)))
-            generated_c_score = classificator(generated_imgs)
+            generated_c_score = classifier(generated_imgs)
             g_loss += 0.01 * F.softmax_cross_entropy(
                 generated_c_score, Variable(xp.zeros(batch_size, dtype=np.int32)))
             acc = F.accuracy(
@@ -160,10 +160,10 @@ def generate_1(generator_hdf5_path, num=10):
 
 def debug():
     train_txt_path = '/home/abe/font_dataset/png_selected_184_64x64/alph_list/all_A.txt'
-    classificator_hdf5_path = '/home/abe/dcgan_font/classificator_alex.hdf5'
-    train(train_txt_path, classificator_hdf5_path, tools.make_date_dir(
+    classifier_hdf5_path = '/home/abe/dcgan_font/classifier_alex.hdf5'
+    train(train_txt_path, classifier_hdf5_path, tools.make_date_dir(
         '/home/abe/dcgan_font/output/debug/'))
-    # generate_1('/home/abe/dcgan_font/output/+classificator_0.01/dcgan_model_gen_950.hdf5', 100)
+    # generate_1('/home/abe/dcgan_font/output/+classifier_0.01/dcgan_model_gen_950.hdf5', 100)
 
 
 if __name__ == '__main__':

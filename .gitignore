@@ -8,6 +8,7 @@
 /keras-dcgan/
 /__pycache__/
 /generated/
+/trash/
 *.pkl
 *.pyc
 *.png

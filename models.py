@@ -209,12 +209,12 @@ class Discriminator(chainer.Chain):
         return y
 
 
-class Classificator(chainer.Chain):
+class Classifier(chainer.Chain):
     '''
     AlexNetを参考に
     '''
     def __init__(self):
-        super(Classificator, self).__init__(
+        super(Classifier, self).__init__(
             conv1=L.Convolution2D(1,  96, 8, stride=4),
             conv2=L.Convolution2D(96, 256,  5, pad=2),
             conv3=L.Convolution2D(256, 384,  3, pad=1),
