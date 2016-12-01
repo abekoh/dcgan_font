@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 import chainer
-from chainer import functions as F
+from chainer import functions as F 
 from chainer import links as L
 
 # 元論文ImageNet
-class GeneratorForImagenet(chainer.Chain):
+class Generator_ForImageNet(chainer.Chain):
     def __init__(self):
-        super(Generator, self).__init__(
+        super(Generator_ForImageNet, self).__init__(
             fc5=L.Linear(100, 512 * 4 * 4),
             norm5=L.BatchNormalization(512 * 4 * 4),
             conv4=L.Deconvolution2D(512, 256, ksize=4, stride=2, pad=1),
@@ -27,9 +27,9 @@ class GeneratorForImagenet(chainer.Chain):
         x = F.tanh(self.conv1(h))
         return x
 
-class DiscriminatorForImagenet(chainer.Chain):
+class Discriminator_ForImageNet(chainer.Chain):
     def __init__(self):
-        super(Discriminator, self).__init__(
+        super(Discriminator_ForImageNet, self).__init__(
             conv1=L.Convolution2D(1,   64,  ksize=4, stride=2, pad=1),
             conv2=L.Convolution2D(64,  128, ksize=4, stride=2, pad=1),
             norm2=L.BatchNormalization(128),
@@ -48,41 +48,9 @@ class DiscriminatorForImagenet(chainer.Chain):
         y = self.fc5(h)
         return y
 
-class GeneratorTwo(chainer.Chain):
+class Generator_ManyLayers(chainer.Chain):
     def __init__(self):
-        super(GeneratorTwo, self).__init__(
-            fc1 = L.Linear(100, 1024),
-            fc2 = L.Linear(1024, 128*16*16),
-            norm2 = L.BatchNormalization(128*16*16),
-            conv3 = L.Deconvolution2D(128, 64, ksize=4, stride=1, pad=1),
-            conv4 = L.Deconvolution2D(64, 1, ksize=4, stride=1, pad=1))
-
-    def __call__(self, z, test=False):
-        h = F.tanh(self.fc1(z))
-        h = F.tanh(self.norm2(self.fc2(h), test=test))
-        h = F.reshape(h, (100, 128, 16, 16))
-        h = F.tanh(self.conv3(F.unpooling_2d(h, ksize=2)))
-        x = F.tanh(self.conv4(F.unpooling_2d(h, ksize=2)))
-        return x
-
-class DiscriminatorTwo(chainer.Chain):
-    def __init__(self):
-        super(DiscriminatorTwo, self).__init__(
-            conv1 = L.Convolution2D(1, 64, ksize=4, stride=1, pad=1),
-            conv2 = L.Convolution2D(64, 128, ksize=4, stride=1, pad=1),
-            fc3 = L.Linear(128*16*16, 1024),
-            fc4 = L.Linear(1024, 2))
-
-    def __call__(self, x, test=False):
-        h = F.max_pooling_2d(F.tanh(self.conv1(x)), ksize=2)
-        h = F.max_pooling_2d(F.tanh(self.conv2(h)), ksize=2)
-        h = F.tanh(self.fc3(h))
-        y = F.sigmoid(self.fc4(h))
-        return y
-
-class GeneratorMany(chainer.Chain):
-    def __init__(self):
-        super(GeneratorMany, self).__init__(
+        super(Generator_ManyLayers, self).__init__(
             fc8=L.Linear(100, 1024),
             fc7=L.Linear(1024, 1024 * 2 * 2),
             norm6=L.BatchNormalization(1024 * 2 * 2),
@@ -107,9 +75,9 @@ class GeneratorMany(chainer.Chain):
         x = F.tanh(self.conv1(F.unpooling_2d(h, ksize=2)))
         return x
 
-class DiscriminatorMany(chainer.Chain):
+class Discriminator_ManyLayers(chainer.Chain):
     def __init__(self):
-        super(DiscriminatorMany, self).__init__(
+        super(Discriminator_ManyLayers, self).__init__(
             conv1=L.Convolution2D(1, 64, ksize=4, stride=1, pad=1),
             norm1=L.BatchNormalization(64),
             conv2=L.Convolution2D(64, 128, ksize=4, stride=1, pad=1),
@@ -131,10 +99,11 @@ class DiscriminatorMany(chainer.Chain):
         y = F.sigmoid(self.fc5(h))
         return y
 
-class GeneratorFour(chainer.Chain):
-    def __init__(self):
-        super(GeneratorFour, self).__init__(
-            fc1 = L.Linear(100, 1024),
+class Generator_FourLayers(chainer.Chain):
+    def __init__(self, z_size=100):
+        self.z_size = z_size
+        super(Generator_FourLayers, self).__init__(
+            fc1 = L.Linear(self.z_size, 1024),
             fc2 = L.Linear(1024, 512*4*4),
             norm2 = L.BatchNormalization(512*4*4),
             conv3 = L.Deconvolution2D(512, 256, ksize=4, stride=1, pad=1),
@@ -144,17 +113,17 @@ class GeneratorFour(chainer.Chain):
 
     def __call__(self, z, test=False):
         h = F.tanh(self.fc1(z))
-        h = F.tanh(self.norm2self.fc2(h), test=test)
-        h = F.reshape(h, (100, 512, 4, 4))
+        h = F.tanh(self.norm2(self.fc2(h), test=test))
+        h = F.reshape(h, (self.z_size, 512, 4, 4))
         h = F.tanh(self.conv3(F.unpooling_2d(h, ksize=2)))
         h = F.tanh(self.conv4(F.unpooling_2d(h, ksize=2)))
         h = F.tanh(self.conv5(F.unpooling_2d(h, ksize=2)))
         x = F.tanh(self.conv6(F.unpooling_2d(h, ksize=2)))
         return x
 
-class DiscriminatorFour(chainer.Chain):
+class Discriminator_FourLayers(chainer.Chain):
     def __init__(self):
-        super(DiscriminatorFour, self).__init__(
+        super(Discriminator_FourLayers, self).__init__(
             conv1 = L.Convolution2D(1, 64, ksize=4, stride=1, pad=1),
             conv2 = L.Convolution2D(64, 128, ksize=4, stride=1, pad=1),
             conv3 = L.Convolution2D(128, 256, ksize=4, stride=1, pad=1),
@@ -171,10 +140,44 @@ class DiscriminatorFour(chainer.Chain):
         y = F.sigmoid(self.fc6(h))
         return y
 
-class Generator(chainer.Chain):
+class Generator_TwoLayers(chainer.Chain):
+    def __init__(self, z_size=100):
+        self.z_size = z_size
+        super(Generator_TwoLayers, self).__init__(
+            fc1 = L.Linear(self.z_size, 1024),
+            fc2 = L.Linear(1024, 128*16*16),
+            norm2 = L.BatchNormalization(128*16*16),
+            conv3 = L.Deconvolution2D(128, 64, ksize=4, stride=1, pad=1),
+            conv4 = L.Deconvolution2D(64, 1, ksize=4, stride=1, pad=1))
+
+    def __call__(self, z, test=False):
+        h = F.tanh(self.fc1(z))
+        h = F.tanh(self.norm2(self.fc2(h), test=test))
+        h = F.reshape(h, (100, 128, 16, 16))
+        h = F.tanh(self.conv3(F.unpooling_2d(h, ksize=2)))
+        x = F.tanh(self.conv4(F.unpooling_2d(h, ksize=2)))
+        return x
+
+class Discriminator_TwoLayers(chainer.Chain):
     def __init__(self):
-        super(Generator, self).__init__(
-            fc1 = L.Linear(100, 1024),
+        super(Discriminator_TwoLayers, self).__init__(
+            conv1 = L.Convolution2D(1, 64, ksize=4, stride=1, pad=1),
+            conv2 = L.Convolution2D(64, 128, ksize=4, stride=1, pad=1),
+            fc3 = L.Linear(128*16*16, 1024),
+            fc4 = L.Linear(1024, 2))
+
+    def __call__(self, x, test=False):
+        h = F.max_pooling_2d(F.tanh(self.conv1(x)), ksize=2)
+        h = F.max_pooling_2d(F.tanh(self.conv2(h)), ksize=2)
+        h = F.tanh(self.fc3(h))
+        y = F.sigmoid(self.fc4(h))
+        return y
+
+class Generator_ThreeLayers(chainer.Chain):
+    def __init__(self, z_size=100):
+        self.z_size = z_size
+        super(Generator_ThreeLayers, self).__init__(
+            fc1 = L.Linear(self.z_size, 1024),
             fc2 = L.Linear(1024, 256*8*8),
             norm2 = L.BatchNormalization(256*8*8),
             conv3 = L.Deconvolution2D(256, 128, ksize=4, stride=1, pad=1),
@@ -191,9 +194,9 @@ class Generator(chainer.Chain):
         x = F.tanh(self.conv5(F.unpooling_2d(h, ksize=2)))
         return x
 
-class Discriminator(chainer.Chain):
+class Discriminator_ThreeLayers(chainer.Chain):
     def __init__(self):
-        super(Discriminator, self).__init__(
+        super(Discriminator_ThreeLayers, self).__init__(
             conv1 = L.Convolution2D(1, 64, ksize=4, stride=1, pad=1), # -> 32*32
             conv2 = L.Convolution2D(64, 128, ksize=4, stride=1, pad=1), # -> 16*16
             conv3 = L.Convolution2D(128, 256, ksize=4, stride=1, pad=1), # -> 8*8
@@ -209,15 +212,41 @@ class Discriminator(chainer.Chain):
         return y
 
 
-class Classifier(chainer.Chain):
+class Generator_ThreeLayers_MultiGPU(chainer.Chain):
+    def __init__(self, z_size=100):
+        self.z_size = z_size
+        super(Generator_ThreeLayers_MultiGPU, self).__init__(
+            generator_gpu0 = Generator_ThreeLayers(self.z_size).to_gpu(0),
+            generator_gpu1 = Generator_ThreeLayers(self.z_size).to_gpu(1),
+            )
+
+    def __call__(self, z, test=False):
+        z0 = self.generator_gpu0(z)
+        z1 = self.generator_gpu1(F.copy(z, 1))
+        x = z0 + F.copy(z1, 0)
+        return x
+
+class Discriminator_ThreeLayers_MultiGPU(chainer.Chain):
+    def __init__(self):
+        super(Discriminator_ThreeLayers_MultiGPU, self).__init__(
+            discriminator_gpu0 = Discriminator_ThreeLayers().to_gpu(0),
+            discriminator_gpu1 = Discriminator_ThreeLayers().to_gpu(1),
+            )
+
+    def __call__(self, x, test=False):
+        x0 = self.discriminator_gpu0(x)
+        x1 = self.discriminator_gpu1(F.copy(x, 1))
+        y = x0 + F.copy(x1, 0)
+        return y
+
+
+class Classifier_AlexNet(chainer.Chain):
     '''
     AlexNetを参考に
     '''
-    def __init__(self, noise=False):
-        class_n = 26
-        if noise:
-            class_n += 1
-        super(Classifier, self).__init__(
+    def __init__(self, class_n=26):
+        self.class_n = class_n
+        super(Classifier_AlexNet, self).__init__(
             conv1=L.Convolution2D(1,  96, 8, stride=4),
             conv2=L.Convolution2D(96, 256,  5, pad=2),
             conv3=L.Convolution2D(256, 384,  3, pad=1),
@@ -225,8 +254,7 @@ class Classifier(chainer.Chain):
             conv5=L.Convolution2D(384, 256,  3, pad=1),
             fc6=L.Linear(256, 4096),
             fc7=L.Linear(4096, 4096),
-            fc8=L.Linear(4096, class_n),
-        )
+            fc8=L.Linear(4096, self.class_n))
 
     def __call__(self, x, train=True):
         h = F.max_pooling_2d(F.local_response_normalization(
@@ -240,3 +268,20 @@ class Classifier(chainer.Chain):
         h = F.dropout(F.relu(self.fc7(h)), train=train)
         y = self.fc8(h)
         return y
+
+
+class Classifier_AlexNet_MultiGPU(chainer.Chain):
+    def __init__(self, class_n=26):
+        self.class_n = class_n
+        super(Classifier_AlexNet_MultiGPU, self).__init__(
+            classifier_gpu0 = Classifier_AlexNet(self.class_n).to_gpu(0),
+            classifier_gpu1 = Classifier_AlexNet(self.class_n).to_gpu(1),
+            )
+
+    def __call__(self, x, train=True):
+        x0 = self.classifier_gpu0(x)
+        x1 = self.classifier_gpu1(F.copy(x, 1))
+        y = x0 + F.copy(x1, 0)
+        return y
+
+
