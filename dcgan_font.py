@@ -19,7 +19,7 @@ import models
 
 def train(train_txt_path, dst_dir_path, 
           generator, discriminator, classifier=None, classifier_hdf5_path='', 
-          classifier_weight=0.01,
+          classifier_weight=0, gpu_device=0, 
           epoch_n=10000, batch_size=100, pic_interval=200, save_models_interval=500, 
           opt='Adam', sgd_lr=0.0002,
           adam_alpha=0.0002, adam_beta1=0.5, weight_decay=0.00001):
@@ -37,12 +37,12 @@ def train(train_txt_path, dst_dir_path,
     org_imgs, alph_num = dataset.filelist_to_list_for_dcgan(train_txt_path)
 
     xp = cuda.cupy
-    # cuda.get_device(0).use()
-    generator.to_gpu()
-    discriminator.to_gpu()
+    cuda.get_device(gpu_device).use()
+    generator.to_gpu(gpu_device)
+    discriminator.to_gpu(gpu_device)
 
     if classifier is not None:
-        classifier.to_gpu()
+        classifier.to_gpu(gpu_device)
         serializers.load_hdf5(classifier_hdf5_path, classifier)
 
     if opt == 'SGD':
@@ -71,10 +71,10 @@ def train(train_txt_path, dst_dir_path,
             # generated_imgsで学習
             # 0: original, 1: generated
             z = Variable(cuda.to_gpu(
-                xp.random.uniform(-1, 1, (batch_size, generator.z_size), dtype=np.float32), 0))
+                xp.random.uniform(-1, 1, (batch_size, generator.z_size), dtype=np.float32), gpu_device))
             generated_imgs = generator(z)
             generated_d_score = discriminator(generated_imgs)
-            g_loss = F.softmax_cross_entropy(
+            g_loss = (1.0 - classifier_weight) * F.softmax_cross_entropy(
                 generated_d_score, Variable(xp.zeros(batch_size, dtype=np.int32)))
             d_loss = F.softmax_cross_entropy(
                 generated_d_score, Variable(xp.ones(batch_size, dtype=np.int32)))
@@ -91,7 +91,7 @@ def train(train_txt_path, dst_dir_path,
                 (batch_size, 1, 64, 64), dtype=np.float32)
             for i, j in enumerate(range(batch_i * batch_size, (batch_i + 1) * batch_size)):
                 batched_org_imgs[i, :, :, :] = (org_imgs[j] - 127.5) / 127.5
-            batched_org_imgs = Variable(cuda.to_gpu(batched_org_imgs))
+            batched_org_imgs = Variable(cuda.to_gpu(batched_org_imgs, gpu_device))
             original_d_score = discriminator(batched_org_imgs)
             d_loss += F.softmax_cross_entropy(original_d_score,
                                               Variable(xp.zeros(batch_size, dtype=np.int32)))
