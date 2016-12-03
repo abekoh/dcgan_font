@@ -111,7 +111,7 @@ def debug():
     # classify
     # print (classify('/home/abe/font_dataset/png_6628_64x64/B/3239.png'))
     # output_accuracy_rate
-    path_tmp1 = '/home/abe/dcgan_font/output_storage/forPRMU/CNN_Test/noclassifier/'
+    path_tmp1 = '/home/abe/dcgan_font/output_storage/forPRMU/CNN_Test/plusclassifier/'
     img_paths, labels = [], []
     for alph in ['A', 'B', 'C', 'D']:
         path_tmp2 = path_tmp1 + alph + '_'
