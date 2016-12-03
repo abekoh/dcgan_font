@@ -3,6 +3,7 @@ import numpy as np
 import cv2
 import shutil 
 import chainer
+import math
 from chainer import cuda
 from chainer import optimizers
 from chainer import serializers
@@ -138,46 +139,44 @@ def train(train_txt_path, dst_dir_path,
     sp.stop()
     tools.save_text_log_file(sp.format_print(), dst_log_txt_path)
 
-def generate_10x10(generator_hdf5_path, z_size=100):
-    xp = np
-    generator = models.Generator(z_size=z_size)
-    serializers.load_hdf5(generator_hdf5_path, generator)
-    z = (xp.random.uniform(-1, 1, (100, z_size)).astype(np.float32))
-    z = Variable(z)
-    generated_imgs = generator(z, test=True)
-    generated_imgs = generated_imgs.data
-    g_imgs = []
-    for g_img in generated_imgs:
-        g_imgs.append(g_img[0])
-    combined_img = combine_imgs(g_imgs, 10)
-    combined_img = combined_img * 127.5 + 127.5
-    combined_img = combined_img.astype(np.int32)
-    cv2.imwrite('generated.png', combined_img)
+# def train(train_txt_path, dst_dir_path, 
+#           generator, discriminator, classifier=None, classifier_hdf5_path='', 
+#           classifier_weight=0, gpu_device=0, 
+#           epoch_n=10000, batch_size=100, pic_interval=200, save_models_interval=500, 
+#           opt='Adam', sgd_lr=0.0002,
+#           adam_alpha=0.0002, adam_beta1=0.5, weight_decay=0.00001):
 
-def generate_1(generator_hdf5_path, num=10, z_size=100):
+
+def generate(dst_dir_path,
+             generator, generator_hdf5_path,
+             img_name='generated', 
+             img_num=10, img_font_num=100):
+    print ('generate fonts at:', dst_dir_path)
     xp = np
-    generator = models.Generator(z_size=z_size)
     serializers.load_hdf5(generator_hdf5_path, generator)
-    for i in range(num):
-        z = (xp.random.uniform(-1, 1, (1, z_size)).astype(np.float32))
+    for img_i in range(img_num):
+        print ('img: {0}/{1}'.format(img_i, img_num))
+        z = (xp.random.uniform(-1, 1, (img_font_num, generator.z_size)).astype(np.float32))
         z = Variable(z)
         generated_imgs = generator(z, test=True)
         generated_imgs = generated_imgs.data
-        generated_img = generated_imgs[0][0]
-        generated_img = generated_img * 127.5 + 127.5
-        generated_img = generated_img.astype(np.int32)
-        cv2.imwrite('generated/generated_' + str(i) + '.png', generated_img)
+        g_imgs = []
+        for g_img in generated_imgs:
+            g_imgs.append(g_img[0])
+        combined_img = combine_imgs(g_imgs, int(math.sqrt(img_font_num)))
+        combined_img = combined_img * 127.5 + 127.5
+        combined_img = combined_img.astype(np.int32)
+        cv2.imwrite(dst_dir_path + img_name + '_' + str(img_i) + '.png', combined_img)
+
 
 def debug():
-    train(
-        train_txt_path='/home/abe/font_dataset/png_selected_200_64x64/alph_list/all_A.txt',
-        dst_dir_path=tools.make_date_dir('/home/abe/dcgan_font/output/debug/'),
-        generator=models.Generator_ThreeLayers_MultiGPU(z_size=50),
-        discriminator=models.Discriminator_ThreeLayers_MultiGPU(),
-        # classifier=models.Classifier_AlexNet_MultiGPU(class_n=27),
-        # classifier_hdf5_path='/home/abe/dcgan_font/classificator_alex_27class.hdf5',
-        )
-    # generate_1('/home/abe/dcgan_font/output/+classifier_0.01/dcgan_model_gen_950.hdf5', 100)
+    generate(
+        dst_dir_path=tools.make_dir('/home/abe/dcgan_font/output_storage/forPRMU/noClassifier_A/generated_ones/'),
+        generator=models.Generator_ThreeLayers(z_size=50),
+        generator_hdf5_path='/home/abe/dcgan_font/output_storage/forPRMU/noClassifier_A/dcgan_model_gen_9999.hdf5',
+        img_name='noclassifier_A',
+        img_num=1000,
+        img_font_num=1)
 
 
 if __name__ == '__main__':
