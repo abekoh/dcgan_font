@@ -18,7 +18,7 @@ from mylib import tools
 import models
 
 
-def train(train_txt_path, test_txt_path, dst_dir_path, epoch_n=100, batch_size=128, model=models.Classifier()):
+def train(train_txt_path, test_txt_path, dst_dir_path, epoch_n=100, batch_size=128, model=models.Classifier_AlexNet()):
     train_imgs, train_labels = dataset.filelist_to_list(train_txt_path)
     test_imgs, test_labels = dataset.filelist_to_list(test_txt_path)
 
@@ -73,29 +73,54 @@ def train(train_txt_path, test_txt_path, dst_dir_path, epoch_n=100, batch_size=1
         serializers.save_hdf5('{0}model_{1}.hdf5'.format(dst_dir_path, epoch_i), model)
         serializers.save_hdf5('{0}state_{1}.hdf5'.format(dst_dir_path, epoch_i), optimizer)
 
-def classify(src_png_path, model=models.Classifier(noise=False), hdf5_path='/home/abe/dcgan_font/classificator_alex.hdf5'):
-    xp = np
-    serializers.load_hdf5(hdf5_path, model)
-    classifier = L.Classifier(model)
+def classify(src_png_path, classifier):
     img = cv2.imread(src_png_path, -1)
     img = img.astype(np.float32)
     img /= 255
     img = img[np.newaxis, np.newaxis, :, :]
     x = Variable(img)
     y = classifier.predictor(x)
-    alph_list = tools.make_alphabets()
-    for alph, score in zip(alph_list, y.data[0]):
-        print (alph, score)
+    max_score = 0
+    for i, score in enumerate(y.data[0]):
+        if score > max_score:
+            max_score = score
+            predict_label = i
+    return predict_label
     
 
+def output_accuracy_rate(img_paths, labels, model=models.Classifier_AlexNet(), hdf5_path='/home/abe/dcgan_font/classificator_alex.hdf5'):
+    serializers.load_hdf5(hdf5_path, model)
+    classifier = L.Classifier(model)
+    correct_n = 0
+    for img_path, label in zip(img_paths, labels):
+        if label == classify(img_path, classifier):
+            print(img_path, '正解')
+            correct_n += 1
+        else:
+            print(img_path, '不正解')
+    accuracy_rate = float(correct_n) / float(len(img_paths))
+    print ('correct_n:', correct_n)
+    print (accuracy_rate)
+
 def debug():
-    # train
-    train_txt_path = '/home/abe/font_dataset/png_6628_64x64/train_noise.txt'
-    test_txt_path = '/home/abe/font_dataset/png_6628_64x64/test_noise.txt'
-    dst_dir_path = tools.make_date_dir('/home/abe/dcgan_font/output_classificator/debug/')
-    train(train_txt_path, test_txt_path, dst_dir_path, model=models.Classifier(noise=True))
-    # # classify
-    # classify('/home/abe/font_dataset/png_6628_64x64/[/3238.png')
+    # # train
+    # train_txt_path = '/home/abe/font_dataset/png_6628_64x64/train_noise.txt'
+    # test_txt_path = '/home/abe/font_dataset/png_6628_64x64/test_noise.txt'
+    # dst_dir_path = tools.make_date_dir('/home/abe/dcgan_font/output_classificator/debug/')
+    # train(train_txt_path, test_txt_path, dst_dir_path, model=models.Classifier(noise=True))
+    # classify
+    # print (classify('/home/abe/font_dataset/png_6628_64x64/B/3239.png'))
+    # output_accuracy_rate
+    path_tmp1 = '/home/abe/dcgan_font/output_storage/forPRMU/CNN_Test/noclassifier/'
+    img_paths, labels = [], []
+    for alph in ['A', 'B', 'C', 'D']:
+        path_tmp2 = path_tmp1 + alph + '_'
+        for i in range(2500):
+            img_path = path_tmp2 + str(i) + '.png'
+            img_paths.append(img_path)
+            labels.append(ord(alph) - 65)
+    output_accuracy_rate(img_paths, labels)
+
 
 
 if __name__ == '__main__':

@@ -139,13 +139,6 @@ def train(train_txt_path, dst_dir_path,
     sp.stop()
     tools.save_text_log_file(sp.format_print(), dst_log_txt_path)
 
-# def train(train_txt_path, dst_dir_path, 
-#           generator, discriminator, classifier=None, classifier_hdf5_path='', 
-#           classifier_weight=0, gpu_device=0, 
-#           epoch_n=10000, batch_size=100, pic_interval=200, save_models_interval=500, 
-#           opt='Adam', sgd_lr=0.0002,
-#           adam_alpha=0.0002, adam_beta1=0.5, weight_decay=0.00001):
-
 
 def generate(dst_dir_path,
              generator, generator_hdf5_path,
