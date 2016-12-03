@@ -198,19 +198,19 @@ dcgan_font.train(
     classifier=models.Classifier_AlexNet(class_n=26),
     classifier_hdf5_path='/home/abe/dcgan_font/classificator_alex.hdf5',
     classifier_weight=0.03)
-dcgan_font.train(
-    train_txt_path='/home/abe/font_dataset/png_selected_200_64x64/alph_list/all_C.txt',
-    dst_dir_path=tools.make_dir('/home/abe/dcgan_font/output_storage/forPRMU/plusClassifier_C_weight0.03/'),
-    generator=models.Generator_ThreeLayers(z_size=50), 
-    discriminator=models.Discriminator_ThreeLayers(),
-    classifier=models.Classifier_AlexNet(class_n=26),
-    classifier_hdf5_path='/home/abe/dcgan_font/classificator_alex.hdf5',
-    classifier_weight=0.03)
-dcgan_font.train(
-    train_txt_path='/home/abe/font_dataset/png_selected_200_64x64/alph_list/all_D.txt',
-    dst_dir_path=tools.make_dir('/home/abe/dcgan_font/output_storage/forPRMU/plusClassifier_D_weight0.03/'),
-    generator=models.Generator_ThreeLayers(z_size=50), 
-    discriminator=models.Discriminator_ThreeLayers(),
-    classifier=models.Classifier_AlexNet(class_n=26),
-    classifier_hdf5_path='/home/abe/dcgan_font/classificator_alex.hdf5',
-    classifier_weight=0.03)
+# dcgan_font.train(
+#     train_txt_path='/home/abe/font_dataset/png_selected_200_64x64/alph_list/all_C.txt',
+#     dst_dir_path=tools.make_dir('/home/abe/dcgan_font/output_storage/forPRMU/plusClassifier_C_weight0.03/'),
+#     generator=models.Generator_ThreeLayers(z_size=50), 
+#     discriminator=models.Discriminator_ThreeLayers(),
+#     classifier=models.Classifier_AlexNet(class_n=26),
+#     classifier_hdf5_path='/home/abe/dcgan_font/classificator_alex.hdf5',
+#     classifier_weight=0.03)
+# dcgan_font.train(
+#     train_txt_path='/home/abe/font_dataset/png_selected_200_64x64/alph_list/all_D.txt',
+#     dst_dir_path=tools.make_dir('/home/abe/dcgan_font/output_storage/forPRMU/plusClassifier_D_weight0.03/'),
+#     generator=models.Generator_ThreeLayers(z_size=50), 
+#     discriminator=models.Discriminator_ThreeLayers(),
+#     classifier=models.Classifier_AlexNet(class_n=26),
+#     classifier_hdf5_path='/home/abe/dcgan_font/classificator_alex.hdf5',
+#     classifier_weight=0.03)
