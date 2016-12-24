@@ -44,25 +44,25 @@ import random
 #     img_num=10,
 #     img_font_num=25)
 
-# filepaths = tools.get_filepaths('/home/abe/font_dataset/png_selected_200_64x64/A/', '*.png')
-# imgs = []
-# for path in filepaths:
-#     img = cv2.imread(path, -1)
-#     imgs.append(img)
-#
-#
-# combined_img = combine_imgs.combine_imgs(imgs=imgs, width=20)
-#
-# cv2_tools.display_img(combined_img)
-# cv2.imwrite('/home/abe/dcgan_font/output_storage/forPRMU/pics/200selected.png', combined_img)
+filepaths = tools.get_filepaths('/home/abe/font_dataset/png_selected_200_64x64/A/', '*.png')
+imgs = []
+for path in filepaths:
+    img = cv2.imread(path, -1)
+    imgs.append(img)
 
-for j in range(20):
-    imgs = []
-    for alph in ['A', 'B', 'C', 'D']:
-        for i in range(20):
-            img = cv2.imread('/home/abe/font_dataset/png_6628_64x64/' + alph + '/' + str(random.randint(0, 6627)) + '.png')
-            imgs.append(img)
-    
-    combined_img = combine_imgs.combine_imgs(imgs=imgs, width=10)
-    cv2.imwrite('/home/abe/dcgan_font/output_storage/forPRMU/pics/fontexamples' + str(j) + '.png', combined_img)
 
+combined_img = combine_imgs.combine_imgs(imgs=imgs, width=40)
+
+cv2_tools.display_img(combined_img)
+cv2.imwrite('/home/abe/dcgan_font/output_storage/forPRMU/pics/200selected.png', combined_img)
+
+# for j in range(10):
+#     imgs = []
+#     for alph in ['A', 'B', 'C', 'D']:
+#         for i in range(10):
+#             img = cv2.imread('/home/abe/font_dataset/png_6628_64x64/' + alph + '/' + str(random.randint(0, 6627)) + '.png')
+#             imgs.append(img)
+#     
+#     combined_img = combine_imgs.combine_imgs(imgs=imgs, width=10)
+#     cv2.imwrite('/home/abe/dcgan_font/output_storage/forPRMU/pics/fontexamples' + str(j) + '.png', combined_img)
+#

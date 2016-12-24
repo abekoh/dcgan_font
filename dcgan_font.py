@@ -25,6 +25,8 @@ def train(train_txt_path, dst_dir_path,
           opt='Adam', sgd_lr=0.0002,
           adam_alpha=0.0002, adam_beta1=0.5, weight_decay=0.00001):
 
+    tools.make_dir(dst_dir_path + 'pic/')
+
     dst_log_txt_path = dst_dir_path + 'log.txt'
     log_values = [
         train_txt_path, dst_dir_path, generator, discriminator, classifier, classifier_hdf5_path, 
@@ -32,8 +34,6 @@ def train(train_txt_path, dst_dir_path,
     tools.save_vars_log_file(tools.get_vars_names(log_values, locals()), log_values, dst_dir_path + 'log.txt')
     shutil.copy('./models.py', dst_dir_path + 'models.py')
     shutil.copy('./dcgan_font.py', dst_dir_path + 'dcgan_font.py')
-
-    tools.make_dir(dst_dir_path + 'pic/')
 
     org_imgs, alph_num = dataset.filelist_to_list_for_dcgan(train_txt_path)
 
@@ -163,13 +163,22 @@ def generate(dst_dir_path,
 
 
 def debug():
-    generate(
-        dst_dir_path=tools.make_dir('/home/abe/dcgan_font/output_storage/forPRMU/noClassifier_A/generated_ones/'),
-        generator=models.Generator_ThreeLayers(z_size=50),
-        generator_hdf5_path='/home/abe/dcgan_font/output_storage/forPRMU/noClassifier_A/dcgan_model_gen_9999.hdf5',
-        img_name='noclassifier_A',
-        img_num=1000,
-        img_font_num=1)
+    train(
+        train_txt_path='/home/abe/font_dataset/png_selected_200_64x64/alph_list/all_A.txt',
+        dst_dir_path=tools.make_dir('/home/abe/dcgan_font/output_storage/nopooling/addC_A/'),
+        generator=models.Generator_ThreeLayers_NoPooling(z_size=50),
+        discriminator=models.Discriminator_ThreeLayers_NoPooling(),
+        classifier=models.Classifier_AlexNet(class_n=26),
+        classifier_hdf5_path='/home/abe/dcgan_font/classificator_alex.hdf5',
+        gpu_device=1)
+
+    # generate(
+    #     dst_dir_path=tools.make_dir('/home/abe/dcgan_font/output_storage/forPRMU/noClassifier_A/generated_ones/'),
+    #     generator=models.Generator_ThreeLayers(z_size=50),
+    #     generator_hdf5_path='/home/abe/dcgan_font/output_storage/forPRMU/noClassifier_A/dcgan_model_gen_9999.hdf5',
+    #     img_name='noclassifier_A',
+    #     img_num=1000,
+    #     img_font_num=1)
 
 
 if __name__ == '__main__':
