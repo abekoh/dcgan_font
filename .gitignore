@@ -13,3 +13,4 @@
 *.pyc
 *.png
 output_classifier
+/ramdom_matrix.txt

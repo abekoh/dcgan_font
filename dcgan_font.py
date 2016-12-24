@@ -18,12 +18,29 @@ from mylib.process_img.combine_imgs import combine_imgs
 import models
 
 
+class SortedRandomMatrix():
+    def __init__(self, random_matrix_txt):
+        self.random_matrix_file = open(random_matrix_txt, 'r')
+
+    def get(self, z_size, batch_size):
+        z = np.empty((0, z_size), np.float32)
+        for batch_i in range(batch_size):
+            line = self.random_matrix_file.readline()
+            line_sp = line.split(',')
+            z_row = []
+            for z_num in line_sp:
+                z_row.append(float(z_num))
+            z = np.append(z, np.array([z_row]).astype(np.float32), axis=0)
+        return z
+
+
 def train(train_txt_path, dst_dir_path, 
           generator, discriminator, classifier=None, classifier_hdf5_path='', 
           classifier_weight=0, gpu_device=0, 
           epoch_n=10000, batch_size=100, pic_interval=200, save_models_interval=500, 
           opt='Adam', sgd_lr=0.0002,
-          adam_alpha=0.0002, adam_beta1=0.5, weight_decay=0.00001):
+          adam_alpha=0.0002, adam_beta1=0.5, weight_decay=0.00001,
+          random_matrix_txt=None):
 
     tools.make_dir(dst_dir_path + 'pic/')
 
@@ -58,6 +75,9 @@ def train(train_txt_path, dst_dir_path,
     g_opt.add_hook(chainer.optimizer.WeightDecay(weight_decay))
     d_opt.add_hook(chainer.optimizer.WeightDecay(weight_decay))
 
+    if random_matrix_txt is not None:
+        random_matrix = SortedRandomMatrix(random_matrix_txt)
+
     sp = stopwatch.StopWatch()
     sp.start()
     
@@ -71,8 +91,13 @@ def train(train_txt_path, dst_dir_path,
                                                         epoch_n, batch_i, batch_n))
             # generated_imgsで学習
             # 0: original, 1: generated
-            z = Variable(cuda.to_gpu(
-                xp.random.uniform(-1, 1, (batch_size, generator.z_size), dtype=np.float32), gpu_device))
+            if random_matrix_txt is None:
+                z = Variable(cuda.to_gpu(
+                    xp.random.uniform(-1, 1, (batch_size, generator.z_size), dtype=np.float32), gpu_device))
+            else:
+                z = Variable(cuda.to_gpu(
+                    random_matrix.get(z_size=generator.z_size, batch_size=batch_size)))
+                
             generated_imgs = generator(z)
             generated_d_score = discriminator(generated_imgs)
             g_loss = (1.0 - classifier_weight) * F.softmax_cross_entropy(
@@ -143,13 +168,18 @@ def train(train_txt_path, dst_dir_path,
 def generate(dst_dir_path,
              generator, generator_hdf5_path,
              img_name='generated', 
-             img_num=10, img_font_num=100):
+             img_num=10, img_font_num=100, random_matrix_txt=None):
     print ('generate fonts at:', dst_dir_path)
     xp = np
     serializers.load_hdf5(generator_hdf5_path, generator)
+    if random_matrix_txt is not None:
+        random_matrix = SortedRandomMatrix(random_matrix_txt=random_matrix_txt)
     for img_i in range(img_num):
         print ('img: {0}/{1}'.format(img_i, img_num))
-        z = (xp.random.uniform(-1, 1, (img_font_num, generator.z_size)).astype(np.float32))
+        if random_matrix_txt is not None:
+            z = random_matrix.get(z_size=generator.z_size, batch_size=img_font_num)
+        else:
+            z = (xp.random.uniform(-1, 1, (img_font_num, generator.z_size)).astype(np.float32))
         z = Variable(z)
         generated_imgs = generator(z, test=True)
         generated_imgs = generated_imgs.data
@@ -163,22 +193,24 @@ def generate(dst_dir_path,
 
 
 def debug():
-    train(
-        train_txt_path='/home/abe/font_dataset/png_selected_200_64x64/alph_list/all_A.txt',
-        dst_dir_path=tools.make_dir('/home/abe/dcgan_font/output_storage/nopooling/addC_A/'),
-        generator=models.Generator_ThreeLayers_NoPooling(z_size=50),
-        discriminator=models.Discriminator_ThreeLayers_NoPooling(),
-        classifier=models.Classifier_AlexNet(class_n=26),
-        classifier_hdf5_path='/home/abe/dcgan_font/classificator_alex.hdf5',
-        gpu_device=1)
-
-    # generate(
-    #     dst_dir_path=tools.make_dir('/home/abe/dcgan_font/output_storage/forPRMU/noClassifier_A/generated_ones/'),
+    # train(
+    #     train_txt_path='/home/abe/font_dataset/png_selected_200_64x64/alph_list/all_A.txt',
+    #     dst_dir_path=tools.make_date_dir('/home/abe/dcgan_font/output_storage/sorted_random_matrix_A/'),
     #     generator=models.Generator_ThreeLayers(z_size=50),
-    #     generator_hdf5_path='/home/abe/dcgan_font/output_storage/forPRMU/noClassifier_A/dcgan_model_gen_9999.hdf5',
-    #     img_name='noclassifier_A',
-    #     img_num=1000,
-    #     img_font_num=1)
+    #     discriminator=models.Discriminator_ThreeLayers(),
+    #     classifier=models.Classifier_AlexNet(class_n=26),
+    #     classifier_hdf5_path='/home/abe/dcgan_font/classificator_alex.hdf5',
+    #     classifier_weight=0.01,
+    #     random_matrix_txt='/home/abe/dcgan_font/ramdom_matrix.txt',
+    #     gpu_device=1)
+
+    generate(
+        dst_dir_path=tools.make_dir('/home/abe/dcgan_font/output_storage/sorted_random_matrix_D_20161224204536/'),
+        generator=models.Generator_ThreeLayers(z_size=50),
+        generator_hdf5_path='/home/abe/dcgan_font/output_storage/sorted_random_matrix_D_20161224204536/dcgan_model_gen_9999.hdf5',
+        random_matrix_txt='/home/abe/dcgan_font/ramdom_matrix.txt',
+        img_num=2,
+        img_font_num=100)
 
 
 if __name__ == '__main__':
