@@ -280,6 +280,41 @@ class Discriminator_ThreeLayers_NoPooling(chainer.Chain):
         return y
 
 
+class Generator_ThreeLayers_Fixed(chainer.Chain):
+    def __init__(self, z_size=100):
+        self.z_size = z_size
+        super(Generator_ThreeLayers_Fixed, self).__init__(
+            fc1 = L.Linear(self.z_size, 256*8*8),
+            conv2 = L.Deconvolution2D(256, 128, ksize=4, stride=2, pad=1),
+            conv3 = L.Deconvolution2D(128, 64, ksize=4, stride=2, pad=1),
+            conv4 = L.Deconvolution2D(64, 1, ksize=4, stride=2, pad=1))
+
+    def __call__(self, z, test=False):
+        n_sample = z.data.shape[0]
+        h = F.tanh(self.fc1(z))
+        h = F.reshape(h, (n_sample, 256, 8, 8))
+        h = F.tanh(self.conv2(h))
+        h = F.tanh(self.conv3(h))
+        x = F.tanh(self.conv4(h))
+        return x
+
+
+class Discriminator_ThreeLayers_Fixed(chainer.Chain):
+    def __init__(self):
+        super(Discriminator_ThreeLayers_Fixed, self).__init__(
+            conv1 = L.Convolution2D(1, 64, ksize=4, stride=2, pad=1),
+            conv2 = L.Convolution2D(64, 128, ksize=4, stride=2, pad=1),
+            conv3 = L.Convolution2D(128, 256, ksize=4, stride=2, pad=1),
+            fc4 = L.Linear(256*8*8, 2))
+
+    def __call__(self, x, test=False):
+        h = F.tanh(self.conv1(x))
+        h = F.tanh(self.conv2(h))
+        h = F.tanh(self.conv3(h))
+        y = F.sigmoid(self.fc4(h))
+        return y
+
+
 class Classifier_AlexNet(chainer.Chain):
     '''
     AlexNetを参考に

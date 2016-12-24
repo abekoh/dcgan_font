@@ -193,24 +193,24 @@ def generate(dst_dir_path,
 
 
 def debug():
-    # train(
-    #     train_txt_path='/home/abe/font_dataset/png_selected_200_64x64/alph_list/all_A.txt',
-    #     dst_dir_path=tools.make_date_dir('/home/abe/dcgan_font/output_storage/sorted_random_matrix_A/'),
-    #     generator=models.Generator_ThreeLayers(z_size=50),
-    #     discriminator=models.Discriminator_ThreeLayers(),
-    #     classifier=models.Classifier_AlexNet(class_n=26),
-    #     classifier_hdf5_path='/home/abe/dcgan_font/classificator_alex.hdf5',
-    #     classifier_weight=0.01,
-    #     random_matrix_txt='/home/abe/dcgan_font/ramdom_matrix.txt',
-    #     gpu_device=1)
-
-    generate(
-        dst_dir_path=tools.make_dir('/home/abe/dcgan_font/output_storage/sorted_random_matrix_D_20161224204536/'),
+    train(
+        train_txt_path='/home/abe/font_dataset/png_selected_200_64x64/alph_list/all_A.txt',
+        dst_dir_path=tools.make_date_dir('/home/abe/dcgan_font/output_storage/modelfix_A/'),
         generator=models.Generator_ThreeLayers(z_size=50),
-        generator_hdf5_path='/home/abe/dcgan_font/output_storage/sorted_random_matrix_D_20161224204536/dcgan_model_gen_9999.hdf5',
+        discriminator=models.Discriminator_ThreeLayers(),
+        classifier=models.Classifier_AlexNet(class_n=26),
+        classifier_hdf5_path='/home/abe/dcgan_font/classificator_alex.hdf5',
+        classifier_weight=0.01,
         random_matrix_txt='/home/abe/dcgan_font/ramdom_matrix.txt',
-        img_num=2,
-        img_font_num=100)
+        gpu_device=1)
+
+    # generate(
+    #     dst_dir_path=tools.make_dir('/home/abe/dcgan_font/output_storage/sorted_random_matrix_D_20161224204536/'),
+    #     generator=models.Generator_ThreeLayers(z_size=50),
+    #     generator_hdf5_path='/home/abe/dcgan_font/output_storage/sorted_random_matrix_D_20161224204536/dcgan_model_gen_9999.hdf5',
+    #     random_matrix_txt='/home/abe/dcgan_font/ramdom_matrix.txt',
+    #     img_num=2,
+    #     img_font_num=100)
 
 
 if __name__ == '__main__':
