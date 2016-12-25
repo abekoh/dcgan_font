@@ -113,16 +113,15 @@ def train(train_txt_path, dst_dir_path,
                     generated_c_score, Variable(xp.ones(batch_size, dtype=np.int32) * alph_num))
                 acc = F.accuracy(
                     generated_c_score, Variable(xp.ones(batch_size, dtype=np.int32) * alph_num))
-                selected_generated_c_score = xp.empty(27)
+                generated_c_score_label = xp.empty(0, dtype=np.int32)
                 for score in generated_c_score.data:
                     if score[alph_num] != max(score):
-                        selected_generated_c_score = xp.vstack((selected_generated_c_score, score))
-                if selected_generated_c_score.ndim == 1:
-                    c_loss = 0
-                else:
-                    print (selected_generated_c_score.shape[0])
-                    c_loss = F.softmax_cross_entropy(
-                        Variable(selected_generated_c_score), Variable(xp.ones(selected_generated_c_score.shape[0], dtype=np.int32) * 26))
+                        generated_c_score_label = xp.hstack((generated_c_score_label, xp.array([26], dtype=np.int32)))
+                    else:
+                        generated_c_score_label = xp.hstack((generated_c_score_label, xp.array([alph_num], dtype=np.int32)))
+                print (generated_c_score_label)
+                c_loss = 0.001 * F.softmax_cross_entropy(
+                    generated_c_score, Variable(generated_c_score_label))
                 print ('accuracy_rate:', acc.data.get())
 
             # original_imgsで学習
