@@ -70,16 +70,16 @@ def train(train_txt_path, dst_dir_path,
     else:
         g_opt = optimizers.Adam(alpha=adam_alpha, beta1=adam_beta1)
         d_opt = optimizers.Adam(alpha=adam_alpha, beta1=adam_beta1)
-        c_opt = optimizers.Adam(alpha=adam_alpha, beta1=adam_beta1)
     g_opt.setup(generator)
     d_opt.setup(discriminator)
-    c_opt.setup(classifier)
     g_opt.add_hook(chainer.optimizer.WeightDecay(weight_decay))
     d_opt.add_hook(chainer.optimizer.WeightDecay(weight_decay))
-    c_opt.add_hook(chainer.optimizer.WeightDecay(weight_decay))
 
     if random_matrix_txt is not None:
         random_matrix = SortedRandomMatrix(random_matrix_txt)
+        c_opt = optimizers.Adam(alpha=adam_alpha, beta1=adam_beta1)
+        c_opt.setup(classifier)
+        c_opt.add_hook(chainer.optimizer.WeightDecay(weight_decay))
 
     sp = stopwatch.StopWatch()
     sp.start()
@@ -113,16 +113,16 @@ def train(train_txt_path, dst_dir_path,
                     generated_c_score, Variable(xp.ones(batch_size, dtype=np.int32) * alph_num))
                 acc = F.accuracy(
                     generated_c_score, Variable(xp.ones(batch_size, dtype=np.int32) * alph_num))
-                generated_c_score_label = xp.empty(0, dtype=np.int32)
-                for score in generated_c_score.data:
-                    if score[alph_num] != max(score):
-                        generated_c_score_label = xp.hstack((generated_c_score_label, xp.array([26], dtype=np.int32)))
-                    else:
-                        generated_c_score_label = xp.hstack((generated_c_score_label, xp.array([alph_num], dtype=np.int32)))
-                print (generated_c_score_label)
-                c_loss = 0.001 * F.softmax_cross_entropy(
-                    generated_c_score, Variable(generated_c_score_label))
                 print ('accuracy_rate:', acc.data.get())
+                if random_matrix_txt is not None:
+                    generated_c_score_label = xp.empty(0, dtype=np.int32)
+                    for score in generated_c_score.data:
+                        if score[alph_num] != max(score):
+                            generated_c_score_label = xp.hstack((generated_c_score_label, xp.array([26], dtype=np.int32)))
+                        else:
+                            generated_c_score_label = xp.hstack((generated_c_score_label, xp.array([alph_num], dtype=np.int32)))
+                    c_loss = 0.001 * F.softmax_cross_entropy(
+                        generated_c_score, Variable(generated_c_score_label))
 
             # original_imgsで学習
             batched_org_imgs = np.zeros(
@@ -142,15 +142,16 @@ def train(train_txt_path, dst_dir_path,
             d_loss.backward()
             d_opt.update()
 
-            c_opt.zero_grads()
-            c_loss.backward()
-            c_opt.update()
-
             g_loss_data = g_loss.data.get()
             d_loss_data = d_loss.data.get()
-            c_loss_data = c_loss.data.get()
 
-            print('g_loss:{0}, d_loss:{1}, c_loss:{2}'.format(g_loss_data, d_loss_data, c_loss_data))
+            if random_matrix_txt is not None:
+                c_opt.zero_grads()
+                c_loss.backward()
+                c_opt.update()
+                c_loss_data = c_loss.data.get()
+
+            print('g_loss:{0}, d_loss:{1}'.format(g_loss_data, d_loss_data))
 
             sum_g_loss += g_loss_data
             sum_d_loss += d_loss_data
@@ -212,7 +213,7 @@ def generate(dst_dir_path,
 def debug():
     train(
         train_txt_path='/home/abe/font_dataset/png_selected_200_64x64/alph_list/all_A.txt',
-        dst_dir_path=tools.make_date_dir('/home/abe/dcgan_font/output_storage/debug/'),
+        dst_dir_path=tools.make_date_dir('/home/abe/dcgan_font/output_storage/trainC/'),
         generator=models.Generator_ThreeLayers(z_size=50),
         discriminator=models.Discriminator_ThreeLayers(),
         classifier=models.Classifier_AlexNet(class_n=27),
