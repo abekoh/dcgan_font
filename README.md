@@ -31,11 +31,12 @@ OS，GPU，ライブラリ，フレームワークなど
 
 GPU必要．
 
-`python dcgan_font.py --mode train --traintxt <学習する画像のパス，ラベルのリスト> --dst <出力先ディレクトリ>`
+`python dcgan_font.py --mode train --traintxt <学習する画像のパス，ラベルのリスト> --dst <出力先ディレクトリ> --classifier --trainedc <Classifierの学習済みモデルのパス>`
 
 学習に用いる画像のパスを記載したtxtを入力とする．
 
 1列目は画像パス，2列目はクラスID(Aから順に0,1,2...)
+
 Aのフォントを生成する場合は全部0となる．
 ```txt:train.txt
 /home/hoge/font/A/0.png, 0
@@ -43,6 +44,8 @@ Aのフォントを生成する場合は全部0となる．
 /home/hoge/font/A/2.png, 0
 ```
 使用する画像は64x64の2値画像．
+
+classifierオプションをつけた場合，クラス弁別を考慮した改良型のDCGANとなる．
 
 ### 画像生成
 

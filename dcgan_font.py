@@ -287,10 +287,16 @@ def user_input():
     parser.add_argument('--mode', type=str)
     parser.add_argument('--dst', type=str, default='./output/')
     parser.add_argument('--traintxt', type=str)
+    parser.add_argument('--classifier', type=bool, default=False, const=True)
     parser.add_argument('--trainedg', type=str, default='./trained_model/generator_A.hdf5')
+    parser.add_argument('--trainedc', type=str, default='./trained_model/classifier_alex.hdf5')
     args = parser.parse_args()
     if args.mode == 'train':
-        train(train_txt_path=args.traintxt, dst_dir_path=args.dst)
+        if args.classifier:
+            train(train_txt_path=args.traintxt, dst_dir_path=args.dst, 
+                  classifier=models.Classifier_AlexNet(class_n=26), classifier_hdf5_path=args.trainedc)
+        else:
+            train(train_txt_path=args.traintxt, dst_dir_path=args.dst)
     elif args.mode == 'generate':
         generate(dst_dir_path=args.dst, generator_hdf5_path=args.trainedg)
 
