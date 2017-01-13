@@ -17,3 +17,6 @@ output_classifier
 /output_classifier
 /classificator_alex_27class.hdf5
 /keras/
+/mylib/__pycache__/
+/mylib/deap/
+/mylib/keras/
