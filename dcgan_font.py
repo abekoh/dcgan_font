@@ -4,6 +4,7 @@ import cv2
 import shutil 
 import chainer
 import math
+import argparse
 from chainer import cuda
 from chainer import optimizers
 from chainer import serializers
@@ -51,7 +52,9 @@ class SortedRandomMatrix():
 
 
 def train(train_txt_path, dst_dir_path, 
-          generator, discriminator, classifier=None, classifier_hdf5_path='', 
+          generator=models.Generator_ThreeLayers(z_size=50), 
+          discriminator=models.Discriminator_ThreeLayers, 
+          classifier=None, classifier_hdf5_path='', 
           classifier_weight=0, gpu_device=0, 
           epoch_n=10000, batch_size=100, batch_pic_interval=200, save_models_interval=500, 
           opt='Adam', sgd_lr=0.0002,
@@ -213,23 +216,24 @@ def train(train_txt_path, dst_dir_path,
     sp.stop()
     tools.save_text_log_file(sp.format_print(), dst_log_txt_path)
 
-
 def generate(dst_dir_path,
-             generator, generator_hdf5_path,
+             generator_hdf5_path,
+             generator=models.Generator_ThreeLayers(z_size=50),
              img_name='generated', 
-             img_num=10, img_font_num=100, random_matrix_txt=None):
+             img_num=1, img_font_num=100, random_matrix_txt=None):
     '''
     DCGANによるフォント生成実行
     GPU不要．
     Args:
         dst_dir_path:           出力先ディレクトリ
-        generator:              Generatorの構成(models.pyのクラス)
         generator_hdf5_path:    Generatorの学習済みモデルのパス
+        generator:              Generatorの構成(models.pyのクラス)
         img_name:               画像の名前
         img_num:                画像の数
         img_font_num:           1画像あたりのフォントの数
         random_matrix_txt:      Generatorの入力で決まった順の乱数を入れる場合，乱数リストを設定
     '''
+    tools.make_dir(tools.correct_dir_path(dst_dir_path))
     xp = np
     serializers.load_hdf5(generator_hdf5_path, generator)
     if random_matrix_txt is not None:
@@ -253,6 +257,9 @@ def generate(dst_dir_path,
 
 
 def debug():
+    '''
+    デバッグ用
+    '''
     train(
         train_txt_path='/home/abe/font_dataset/png_selected_200_64x64/alph_list/all_A.txt',
         dst_dir_path=tools.make_date_dir('/home/abe/dcgan_font/output_storage/debug/'),
@@ -272,8 +279,23 @@ def debug():
     #     img_num=2,
     #     img_font_num=100)
 
+def user_input():
+    '''
+    入力による実行
+    '''
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--mode', type=str)
+    parser.add_argument('--dst', type=str, default='./generated/')
+    parser.add_argument('--traintxt', type=str)
+    parser.add_argument('--trainedg', type=str, default='./trained_model/generator_A.hdf5')
+    args = parser.parse_args()
+    if args.mode == 'train':
+        train(train_txt_path=args.traintxt, dst_dir_path=args.dst)
+    elif args.mode == 'generate':
+        generate(dst_dir_path=args.dst, generator_hdf5_path=args.trainedg)
 
 if __name__ == '__main__':
-    debug()
+    # debug()
+    user_input()
 
 
