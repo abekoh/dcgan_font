@@ -45,7 +45,7 @@ Aのフォントを生成する場合は全部0となる．
 ```
 使用する画像は64x64の2値画像．
 
-classifierオプションをつけた場合，クラス弁別を考慮した改良型のDCGANとなる．
+`--classifier`をつけた場合，文字分類CNNを組み込んだ改良型のDCGANとなる．
 
 ### 画像生成
 
@@ -53,7 +53,7 @@ GPU不要．
 
 `python dcgan_font.py --mode generate --trainedg <Generatorの学習済みモデルのパス> --dst <出力先ディレクトリ>`
 
-サンプルとして`trained_model`の`generator_A.hdf5`を使用可能．
+サンプルとして`trained_model/`の`generator_A.hdf5`を使用可能．
 
 ## 結果
 <img src='https://github.com/abekoh/dcgan_font/blob/develop/example/addClassifier_A.png'>
