@@ -15,13 +15,18 @@ OS，GPU，ライブラリ，フレームワークなど
 
 ## とりあえず画像を生成してみる
 `python dcgan_font.py --mode generate`
+
 ディレクトリ`output`に生成画像が出力されます．
 
 ## 使い方
 **学習:**
+
 GPU必要．
+
 `python dcgan_font.py --mode train --traintxt <学習する画像のパス，ラベルのリスト>`
+
 学習に用いる画像のパスを記載したtxtを入力とする．
+
 1列目は画像パス，2列目はクラスID('A'から順に0,1,2...)
 ```txt:train.txt
 /home/hoge/font/A/0.png, 0
@@ -31,10 +36,12 @@ GPU必要．
 使用する画像は64x64の2値画像．
 
 **画像生成:**
-GPU不要．
-`python dcgan_font.py --mode generate --trainedg <Generatorの学習済みモデルのパス>`
-サンプルとして`trained_model`の`generator_A.hdf5`を使用可能．
 
+GPU不要．
+
+`python dcgan_font.py --mode generate --trainedg <Generatorの学習済みモデルのパス>`
+
+サンプルとして`trained_model`の`generator_A.hdf5`を使用可能．
 
 ## 結果
 <img src='https://github.com/abekoh/dcgan_font/blob/develop/example/addClassifier_A.png'>
@@ -44,7 +51,9 @@ GPU不要．
 
 ## 参考文献
 * Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks 
+
   https://arxiv.org/abs/1511.06434
 
 * chainer-DCGAN
+
   https://github.com/mattya/chainer-DCGAN
