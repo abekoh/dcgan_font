@@ -17,6 +17,10 @@ DCGANを用いてフォントを生成する試み．
 * 学習済みモデルを使用して生成のみ行う場合，GPUは不要．
 
 ## 結果
+<img src='https://github.com/abekoh/dcgan_font/blob/develop/example/addClassifier_A.png'>
+<img src='https://github.com/abekoh/dcgan_font/blob/develop/example/addClassifier_B.png'>
+<img src='https://github.com/abekoh/dcgan_font/blob/develop/example/addClassifier_C.png'>
+<img src='https://github.com/abekoh/dcgan_font/blob/develop/example/addClassifier_D.png'>
 
 ## 参考文献
 * Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks 
