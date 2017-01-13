@@ -2,6 +2,9 @@
 import chainer
 from chainer import functions as F 
 from chainer import links as L
+'''
+Generator, Discriminator, Classifierの定義
+'''
 
 # 元論文ImageNet
 class Generator_ForImageNet(chainer.Chain):

@@ -14,3 +14,7 @@
 *.png
 output_classifier
 /ramdom_matrix.txt
+/environment_log.txt
+/output_classifier
+/classificator_alex_27class.hdf5
+/keras/

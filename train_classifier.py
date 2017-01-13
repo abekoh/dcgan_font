@@ -19,6 +19,22 @@ import models
 
 
 def train(train_txt_path, test_txt_path, dst_dir_path, epoch_n=100, batch_size=128, model=models.Classifier_AlexNet()):
+    '''
+    Classifierの学習
+    Args:
+        train_txt_path:         学習に用いる画像のパスを記載したtxt．
+                                1列目は画像パス，2列目はクラスID('A'から順に0,1,2...)
+                                ex) /home/hoge/font/A/0.png, 0
+                                    /home/hoge/font/B/0.png, 1
+                                    /home/hoge/font/C/0.png, 2
+                                    /home/hoge/2.png, 0
+        test_txt_path:          テストに用いる画像のパスを記載したtxt．
+                                フォーマットはtrain_txt_pathと同じ．
+        dst_dir_path:           学習済みモデルの出力先．
+        epoch_n:                学習回数．
+        batch_size:             バッチサイズ．
+        model:                  Classifierの学習済みモデルのパス．(models.pyのクラス)
+    '''
     train_imgs, train_labels = dataset.filelist_to_list(train_txt_path)
     test_imgs, test_labels = dataset.filelist_to_list(test_txt_path)
 
@@ -73,7 +89,16 @@ def train(train_txt_path, test_txt_path, dst_dir_path, epoch_n=100, batch_size=1
         serializers.save_hdf5('{0}model_{1}.hdf5'.format(dst_dir_path, epoch_i), model)
         serializers.save_hdf5('{0}state_{1}.hdf5'.format(dst_dir_path, epoch_i), optimizer)
 
+
 def classify(src_png_path, classifier):
+    '''
+    クラス分別の実行
+    Args:
+        src_png_path:   分別する画像のパス
+        classifier:     Classifierのモデルの構造(models.pyのクラス)
+    Return:
+        predict_label:  分別されたラベル(クラスID)
+    '''
     img = cv2.imread(src_png_path, -1)
     img = img.astype(np.float32)
     img /= 255
@@ -86,9 +111,19 @@ def classify(src_png_path, classifier):
             max_score = score
             predict_label = i
     return predict_label
-    
 
-def output_accuracy_rate(img_paths, labels, model=models.Classifier_AlexNet(), hdf5_path='/home/abe/dcgan_font/classificator_alex.hdf5'):
+
+def output_accuracy_rate(img_paths, labels, 
+                         model=models.Classifier_AlexNet(), 
+                         hdf5_path='/home/abe/dcgan_font/classificator_alex.hdf5'):
+    '''
+    正解率の出力
+    Args:
+        img_paths:      対象の画像のパス
+        labels:         対象の画像の正解ラベル
+        model:          Classifierのモデルの構造(models.pyのクラス)
+        hdf5_path:      Classifierの学習済みモデルのパス
+    '''
     serializers.load_hdf5(hdf5_path, model)
     classifier = L.Classifier(model)
     correct_n = 0
@@ -120,7 +155,6 @@ def debug():
             img_paths.append(img_path)
             labels.append(ord(alph) - 65)
     output_accuracy_rate(img_paths, labels)
-
 
 
 if __name__ == '__main__':

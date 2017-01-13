@@ -19,10 +19,26 @@ import models
 
 
 class SortedRandomMatrix():
+    '''
+    乱数リスト読み込みクラス
+    '''
     def __init__(self, random_matrix_txt):
+        '''
+        コンストラクタ
+        Args:
+            random_matrix_txt:  乱数リストのパス
+        '''
         self.random_matrix_file = open(random_matrix_txt, 'r')
 
     def get(self, z_size, batch_size):
+        '''
+        乱数の取得
+        Args:
+            z_size:     読み込むべきzの大きさ
+            batch_size: バッチサイズ
+        Return:
+            z:          Generatorの入力となるz
+        '''
         z = np.empty((0, z_size), np.float32)
         for batch_i in range(batch_size):
             line = self.random_matrix_file.readline()
@@ -37,13 +53,43 @@ class SortedRandomMatrix():
 def train(train_txt_path, dst_dir_path, 
           generator, discriminator, classifier=None, classifier_hdf5_path='', 
           classifier_weight=0, gpu_device=0, 
-          epoch_n=10000, batch_size=100, pic_interval=200, save_models_interval=500, 
+          epoch_n=10000, batch_size=100, batch_pic_interval=200, save_models_interval=500, 
           opt='Adam', sgd_lr=0.0002,
           adam_alpha=0.0002, adam_beta1=0.5, weight_decay=0.00001,
           random_matrix_txt=None):
+    """
+    DCGANの学習実行
+    GPU必要．
+    Args:
+        train_txt_path:         学習に用いる画像のパスを記載したtxt．
+                                1列目は画像パス，2列目はクラスID('A'から順に0,1,2...)
+                                ex) /home/hoge/font/A/0.png, 0
+                                    /home/hoge/font/B/1.png, 0
+                                    /home/hoge/font/C/2.png, 0
+                                ※現状ではすべて同じクラスIDのものが望ましい．
+        dst_dir_path:           保存先のパス．
+                                途中経過の画像，学習済みモデル，ログファイルが保存される．
+        generator:              Generatorのモデル構造(models.pyのクラス)
+        discriminator:          Discriminatorのモデルの構造(models.pyのクラス)
+        classifier:             Classifierのモデル(models.pyのクラス)
+        classifier_hdf5_path:   Classifierの学習済みモデルのパス
+        classifier_weight:      Classifierの重み(1-classifier_wight: Discriminatorの重み)
+        gpu_device:             使用するGPUのID
+        epoch_n:                学習回数
+        batch_size:             バッチサイズ
+        batch_pic_interval:     バッチサイズで画像を保存する間隔
+        save_models_interval:   学習済みモデルを保存する間隔
+        opt:                    最適化手法('SGD' or 'Adam')
+        sgd_lr:                 SGDの学習率
+        adam_alpha:             Adamのalphaの値
+        adam_beta1:             Adamのbeta_1の値
+        weight_decay:           学習減衰率
+        random_matrix_txt:      Generatorの入力で決まった順の乱数を入れる場合，乱数リストを設定
+    """
 
     tools.make_dir(dst_dir_path + 'pic/')
 
+    # ログの保存
     dst_log_txt_path = dst_dir_path + 'log.txt'
     log_values = [
         train_txt_path, dst_dir_path, generator, discriminator, classifier, classifier_hdf5_path, 
@@ -52,6 +98,7 @@ def train(train_txt_path, dst_dir_path,
     shutil.copy('./models.py', dst_dir_path + 'models.py')
     shutil.copy('./dcgan_font.py', dst_dir_path + 'dcgan_font.py')
 
+    # 学習パターンの読み込み
     org_imgs, alph_num = dataset.filelist_to_list_for_dcgan(train_txt_path)
 
     xp = cuda.cupy
@@ -77,13 +124,10 @@ def train(train_txt_path, dst_dir_path,
 
     if random_matrix_txt is not None:
         random_matrix = SortedRandomMatrix(random_matrix_txt)
-        c_opt = optimizers.Adam(alpha=adam_alpha, beta1=adam_beta1)
-        c_opt.setup(classifier)
-        c_opt.add_hook(chainer.optimizer.WeightDecay(weight_decay))
 
+    # 学習開始
     sp = stopwatch.StopWatch()
     sp.start()
-    
     for epoch_i in range(epoch_n):
         sum_g_loss = np.float32(0)
         sum_d_loss = np.float32(0)
@@ -93,36 +137,27 @@ def train(train_txt_path, dst_dir_path,
             print ('epoch:{0}/{1}, batch:{2}/{3}'.format(epoch_i,
                                                         epoch_n, batch_i, batch_n))
             # generated_imgsで学習
-            # 0: original, 1: generated
+            # Discriminatorでは0が本物，1が偽物のラベル
             if random_matrix_txt is None:
                 z = Variable(cuda.to_gpu(
                     xp.random.uniform(-1, 1, (batch_size, generator.z_size), dtype=np.float32), gpu_device))
             else:
                 z = Variable(cuda.to_gpu(
                     random_matrix.get(z_size=generator.z_size, batch_size=batch_size)))
-                
             generated_imgs = generator(z)
             generated_d_score = discriminator(generated_imgs)
             g_loss = (1.0 - classifier_weight) * F.softmax_cross_entropy(
                 generated_d_score, Variable(xp.zeros(batch_size, dtype=np.int32)))
             d_loss = F.softmax_cross_entropy(
                 generated_d_score, Variable(xp.ones(batch_size, dtype=np.int32)))
+            # Classifierが設定されている場合，クラスらしさを学習
             if classifier is not None:
                 generated_c_score = classifier(generated_imgs)
                 g_loss += classifier_weight * F.softmax_cross_entropy(
                     generated_c_score, Variable(xp.ones(batch_size, dtype=np.int32) * alph_num))
                 acc = F.accuracy(
                     generated_c_score, Variable(xp.ones(batch_size, dtype=np.int32) * alph_num))
-                print ('accuracy_rate:', acc.data.get())
-                if random_matrix_txt is not None:
-                    generated_c_score_label = xp.empty(0, dtype=np.int32)
-                    for score in generated_c_score.data:
-                        if score[alph_num] != max(score):
-                            generated_c_score_label = xp.hstack((generated_c_score_label, xp.array([26], dtype=np.int32)))
-                        else:
-                            generated_c_score_label = xp.hstack((generated_c_score_label, xp.array([alph_num], dtype=np.int32)))
-                    c_loss = 0.001 * F.softmax_cross_entropy(
-                        generated_c_score, Variable(generated_c_score_label))
+                print ('Classifier accuracy_rate:', acc.data.get())
 
             # original_imgsで学習
             batched_org_imgs = np.zeros(
@@ -145,18 +180,13 @@ def train(train_txt_path, dst_dir_path,
             g_loss_data = g_loss.data.get()
             d_loss_data = d_loss.data.get()
 
-            if random_matrix_txt is not None:
-                c_opt.zero_grads()
-                c_loss.backward()
-                c_opt.update()
-                c_loss_data = c_loss.data.get()
-
             print('g_loss:{0}, d_loss:{1}'.format(g_loss_data, d_loss_data))
 
             sum_g_loss += g_loss_data
             sum_d_loss += d_loss_data
 
-            if batch_i % pic_interval == 0:
+            # 途中経過の画像の保存
+            if batch_i % batch_pic_interval == 0:
                 z = Variable(
                     xp.random.uniform(-1, 1, (100, generator.z_size), dtype=np.float32))
                 generated_imgs = generator(z, test=True)
@@ -170,6 +200,7 @@ def train(train_txt_path, dst_dir_path,
                 cv2.imwrite('{0}pic/{1}_{2}.png'.format(dst_dir_path,
                                                         epoch_i, batch_i), combined_img)
             sp.view()
+        # 学習済みモデルの保存(0回目は保存しない，最後は保存する)
         if (epoch_i % save_models_interval == 0 and epoch_i != 0) or epoch_i == epoch_n - 1:
             serializers.save_hdf5("{0}dcgan_model_dis_{1}.hdf5".format(
                 dst_dir_path, epoch_i), discriminator)
@@ -187,7 +218,18 @@ def generate(dst_dir_path,
              generator, generator_hdf5_path,
              img_name='generated', 
              img_num=10, img_font_num=100, random_matrix_txt=None):
-    print ('generate fonts at:', dst_dir_path)
+    '''
+    DCGANによるフォント生成実行
+    GPU不要．
+    Args:
+        dst_dir_path:           出力先ディレクトリ
+        generator:              Generatorの構成(models.pyのクラス)
+        generator_hdf5_path:    Generatorの学習済みモデルのパス
+        img_name:               画像の名前
+        img_num:                画像の数
+        img_font_num:           1画像あたりのフォントの数
+        random_matrix_txt:      Generatorの入力で決まった順の乱数を入れる場合，乱数リストを設定
+    '''
     xp = np
     serializers.load_hdf5(generator_hdf5_path, generator)
     if random_matrix_txt is not None:
@@ -213,14 +255,14 @@ def generate(dst_dir_path,
 def debug():
     train(
         train_txt_path='/home/abe/font_dataset/png_selected_200_64x64/alph_list/all_A.txt',
-        dst_dir_path=tools.make_date_dir('/home/abe/dcgan_font/output_storage/trainC/'),
+        dst_dir_path=tools.make_date_dir('/home/abe/dcgan_font/output_storage/debug/'),
         generator=models.Generator_ThreeLayers(z_size=50),
         discriminator=models.Discriminator_ThreeLayers(),
-        classifier=models.Classifier_AlexNet(class_n=27),
-        classifier_hdf5_path='/home/abe/dcgan_font/classificator_alex_27class.hdf5',
+        classifier=models.Classifier_AlexNet(class_n=26),
+        classifier_hdf5_path='/home/abe/dcgan_font/classificator_alex.hdf5',
         classifier_weight=0.01,
         random_matrix_txt='/home/abe/dcgan_font/ramdom_matrix.txt',
-        gpu_device=1)
+        gpu_device=0)
 
     # generate(
     #     dst_dir_path=tools.make_dir('/home/abe/dcgan_font/output_storage/sorted_random_matrix_D_20161224204536/'),

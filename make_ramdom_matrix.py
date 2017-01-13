@@ -2,6 +2,13 @@
 import numpy as np
 
 def make_ramdom_matrix(dst_txt_path, row_n=100, col_n=50):
+    '''
+    乱数リストの作成
+    Args:
+        dst_txt_path:   出力ファイル
+        row_n:          行の数
+        col_n:          列の数
+    '''
     with open(dst_txt_path, 'w') as dst_file:
         for row_i in range(row_n):
             if row_i % 100 == 0:
