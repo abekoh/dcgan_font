@@ -285,7 +285,7 @@ def user_input():
     '''
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', type=str)
-    parser.add_argument('--dst', type=str, default='./generated/')
+    parser.add_argument('--dst', type=str, default='./output/')
     parser.add_argument('--traintxt', type=str)
     parser.add_argument('--trainedg', type=str, default='./trained_model/generator_A.hdf5')
     args = parser.parse_args()

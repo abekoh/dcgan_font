@@ -2,6 +2,7 @@
 DCGANを用いてフォントを生成する試み．
 
 ## 実験環境
+OS，GPU，ライブラリ，フレームワークなど
 * Ubuntu 16.04
 * GeForce GTX 1080 * 2
 * CUDA 8.0
@@ -12,9 +13,28 @@ DCGANを用いてフォントを生成する試み．
 * OpenCV 3.1.0
 * h5py 2.6.0
 
+## とりあえず画像を生成してみる
+`python dcgan_font.py --mode generate`
+ディレクトリ`output`に生成画像が出力されます．
+
 ## 使い方
-* DCGANの学習にはGPUが必要．
-* 学習済みモデルを使用して生成のみ行う場合，GPUは不要．
+**学習:**
+GPU必要．
+`python dcgan_font.py --mode train --traintxt <学習する画像のパス，ラベルのリスト>`
+学習に用いる画像のパスを記載したtxtを入力とする．
+1列目は画像パス，2列目はクラスID('A'から順に0,1,2...)
+```txt:train.txt
+/home/hoge/font/A/0.png, 0
+/home/hoge/font/A/1.png, 0
+/home/hoge/font/A/2.png, 0
+```
+使用する画像は64x64の2値画像．
+
+**画像生成:**
+GPU不要．
+`python dcgan_font.py --mode generate --trainedg <Generatorの学習済みモデルのパス>`
+サンプルとして`trained_model`の`generator_A.hdf5`を使用可能．
+
 
 ## 結果
 <img src='https://github.com/abekoh/dcgan_font/blob/develop/example/addClassifier_A.png'>
