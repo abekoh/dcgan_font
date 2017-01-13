@@ -1,6 +1,10 @@
 # dcgan_font
 DCGANを用いてフォントを生成する試み．
 
+# 特徴
+DCGANに文字を分類するCNNを組み込むことで，
+従来のより文字らしいフォントが生成されるようになっている．
+
 ## 実験環境
 OS，GPU，ライブラリ，フレームワークなど
 * Ubuntu 16.04
@@ -13,21 +17,22 @@ OS，GPU，ライブラリ，フレームワークなど
 * OpenCV 3.1.0
 * h5py 2.6.0
 
-## とりあえず画像を生成してみる
+## とりあえずAのフォントを生成してみる
 `python dcgan_font.py --mode generate`
 
 ディレクトリ`output`に生成画像が出力されます．
 
 ## 使い方
-**学習:**
+### 学習
 
 GPU必要．
 
-`python dcgan_font.py --mode train --traintxt <学習する画像のパス，ラベルのリスト>`
+`python dcgan_font.py --mode train --traintxt <学習する画像のパス，ラベルのリスト> --dst <出力先ディレクトリ>`
 
 学習に用いる画像のパスを記載したtxtを入力とする．
 
-1列目は画像パス，2列目はクラスID('A'から順に0,1,2...)
+1列目は画像パス，2列目はクラスID(Aから順に0,1,2...)
+Aのフォントを生成する場合は全部0となる．
 ```txt:train.txt
 /home/hoge/font/A/0.png, 0
 /home/hoge/font/A/1.png, 0
@@ -35,11 +40,11 @@ GPU必要．
 ```
 使用する画像は64x64の2値画像．
 
-**画像生成:**
+### 画像生成
 
 GPU不要．
 
-`python dcgan_font.py --mode generate --trainedg <Generatorの学習済みモデルのパス>`
+`python dcgan_font.py --mode generate --trainedg <Generatorの学習済みモデルのパス> --dst <出力先ディレクトリ>`
 
 サンプルとして`trained_model`の`generator_A.hdf5`を使用可能．
 
