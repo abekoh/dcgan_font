@@ -18,7 +18,7 @@ from mylib import tools
 import models
 
 
-def train(train_txt_path, test_txt_path, dst_dir_path, epoch_n=100, batch_size=128, model=models.Classifier_AlexNet()):
+def train(train_txt_path, test_txt_path, dst_dir_path, is_save_temp=True, last_model_filename='last', epoch_n=100, batch_size=128, model=models.Classifier_AlexNet()):
     '''
     Classifierの学習
     Args:
@@ -86,8 +86,12 @@ def train(train_txt_path, test_txt_path, dst_dir_path, epoch_n=100, batch_size=1
         print('train: loss={0}, accuracy={1}'.format(train_sum_loss / train_imgs_n, train_sum_acc / train_imgs_n))
         print('test:  loss={0}, accuracy={1}'.format(test_sum_loss / test_imgs_n, test_sum_acc / test_imgs_n))
 
-        serializers.save_hdf5('{0}model_{1}.hdf5'.format(dst_dir_path, epoch_i), model)
-        serializers.save_hdf5('{0}state_{1}.hdf5'.format(dst_dir_path, epoch_i), optimizer)
+        if is_save_temp and (epoch_i != epoch_n - 1):
+            serializers.save_hdf5('{0}model_{1}.hdf5'.format(dst_dir_path, epoch_i), model)
+            serializers.save_hdf5('{0}state_{1}.hdf5'.format(dst_dir_path, epoch_i), optimizer)
+    serializers.save_hdf5('{0}model_{1}.hdf5'.format(dst_dir_path, last_model_filename), model)
+    serializers.save_hdf5('{0}state_{1}.hdf5'.format(dst_dir_path, last_model_filename), optimizer)
+
 
 
 def classify(src_png_path, classifier):

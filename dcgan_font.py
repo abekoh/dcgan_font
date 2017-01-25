@@ -53,24 +53,25 @@ class SortedRandomMatrix():
 
 def train(train_txt_path, dst_dir_path, 
           generator=models.Generator_ThreeLayers(z_size=50), 
-          discriminator=models.Discriminator_ThreeLayers, 
+          discriminator=models.Discriminator_ThreeLayers(),
           classifier=None, classifier_hdf5_path='', 
           classifier_weight=0, gpu_device=0, 
-          epoch_n=10000, batch_size=100, batch_pic_interval=200, save_models_interval=500, 
+          epoch_n=10000, batch_size=100, is_save_pic=True, batch_pic_interval=200, save_models_interval=500, 
+          model_filename='dcgan',
           opt='Adam', sgd_lr=0.0002,
           adam_alpha=0.0002, adam_beta1=0.5, weight_decay=0.00001,
           random_matrix_txt=None):
-    """
+    '''
     DCGANの学習実行
     GPU必要．
     Args:
         train_txt_path:         学習に用いる画像のパスを記載したtxt．
                                 1列目は画像パス，2列目はクラスID('A'から順に0,1,2...)
-                                ex) /home/hoge/font/A/0.png, 0
-                                    /home/hoge/font/B/1.png, 0
+                                eHx) /home/hoge/font/A/0.png, 0
+                                  [MaI  /home/hoge/font/B/1.png, 0
                                     /home/hoge/font/C/2.png, 0
                                 ※現状ではすべて同じクラスIDのものが望ましい．
-        dst_dir_path:           保存先のパス．
+        dst_dir_path:           保存先[MaIのパス．
                                 途中経過の画像，学習済みモデル，ログファイルが保存される．
         generator:              Generatorのモデル構造(models.pyのクラス)
         discriminator:          Discriminatorのモデルの構造(models.pyのクラス)
@@ -81,6 +82,7 @@ def train(train_txt_path, dst_dir_path,
         epoch_n:                学習回数
         batch_size:             バッチサイズ
         batch_pic_interval:     バッチサイズで画像を保存する間隔
+        is_save_pic:            途中経過の画像を保存するか
         save_models_interval:   学習済みモデルを保存する間隔
         opt:                    最適化手法('SGD' or 'Adam')
         sgd_lr:                 SGDの学習率
@@ -88,8 +90,7 @@ def train(train_txt_path, dst_dir_path,
         adam_beta1:             Adamのbeta_1の値
         weight_decay:           学習減衰率
         random_matrix_txt:      Generatorの入力で決まった順の乱数を入れる場合，乱数リストを設定
-    """
-
+    '''
     tools.make_dir(dst_dir_path + 'pic/')
 
     # ログの保存
@@ -189,7 +190,7 @@ def train(train_txt_path, dst_dir_path,
             sum_d_loss += d_loss_data
 
             # 途中経過の画像の保存
-            if batch_i % batch_pic_interval == 0:
+            if is_save_pic and (batch_i % batch_pic_interval == 0):
                 z = Variable(
                     xp.random.uniform(-1, 1, (100, generator.z_size), dtype=np.float32))
                 generated_imgs = generator(z, test=True)
@@ -205,14 +206,14 @@ def train(train_txt_path, dst_dir_path,
             sp.view()
         # 学習済みモデルの保存(0回目は保存しない，最後は保存する)
         if (epoch_i % save_models_interval == 0 and epoch_i != 0) or epoch_i == epoch_n - 1:
-            serializers.save_hdf5("{0}dcgan_model_dis_{1}.hdf5".format(
-                dst_dir_path, epoch_i), discriminator)
-            serializers.save_hdf5("{0}dcgan_model_gen_{1}.hdf5".format(
-                dst_dir_path, epoch_i), generator)
-            serializers.save_hdf5("{0}dcgan_state_dis_{1}.hdf5".format(
-                dst_dir_path, epoch_i), d_opt)
-            serializers.save_hdf5("{0}dcgan_state_gen_{1}.hdf5".format(
-                dst_dir_path, epoch_i), g_opt)
+            serializers.save_hdf5("{0}{1}_model_dis_{2}.hdf5".format(
+                dst_dir_path, model_filename, epoch_i), discriminator)
+            serializers.save_hdf5("{0}{1}_model_gen_{2}.hdf5".format(
+                dst_dir_path, model_filename, epoch_i), generator)
+            serializers.save_hdf5("{0}{1}_state_dis_{2}.hdf5".format(
+                dst_dir_path, model_filename, epoch_i), d_opt)
+            serializers.save_hdf5("{0}{1}_state_gen_{2}.hdf5".format(
+                dst_dir_path, model_filename, epoch_i), g_opt)
     sp.stop()
     tools.save_text_log_file(sp.format_print(), dst_log_txt_path)
 
@@ -253,7 +254,11 @@ def generate(dst_dir_path,
         combined_img = combine_imgs(g_imgs, int(math.sqrt(img_font_num)))
         combined_img = combined_img * 127.5 + 127.5
         combined_img = combined_img.astype(np.int32)
-        cv2.imwrite(dst_dir_path + img_name + '_' + str(img_i) + '.png', combined_img)
+        if img_name == '':
+            save_png_path = dst_dir_path + str(img_i) + '.png'
+        else:
+            save_png_path = dst_dir_path + img_name + '_' + str(img_i) + '.png'
+        cv2.imwrite(save_png_path, combined_img)
 
 
 def debug():
@@ -263,10 +268,10 @@ def debug():
     train(
         train_txt_path='/home/abe/font_dataset/png_selected_200_64x64/alph_list/all_A.txt',
         dst_dir_path=tools.make_date_dir('/home/abe/dcgan_font/output_storage/debug/'),
-        generator=models.Generator_ThreeLayers(z_size=50),
-        discriminator=models.Discriminator_ThreeLayers(),
+        # generator=models.Generator_ThreeLayers(z_size=50),
+        # discriminator=models.Discriminator_ThreeLayers(),
         classifier=models.Classifier_AlexNet(class_n=26),
-        classifier_hdf5_path='/home/abe/dcgan_font/classificator_alex.hdf5',
+        classifier_hdf5_path='/home/abe/dcgan_font/trained_model/classificator_alex.hdf5',
         classifier_weight=0.01,
         random_matrix_txt='/home/abe/dcgan_font/ramdom_matrix.txt',
         gpu_device=0)
@@ -295,7 +300,7 @@ def user_input():
         generate(dst_dir_path=args.dst, generator_hdf5_path=args.trainedg)
 
 if __name__ == '__main__':
-    # debug()
-    user_input()
+    debug()
+    # user_input()
 
 
