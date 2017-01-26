@@ -69,4 +69,5 @@ def train_cdg(dst_dir_path, default_train_all_txt_path, default_test_all_txt_pat
 if __name__ == '__main__':
     train_cdg(tools.make_dir('/home/abe/dcgan_font/cdg/'), '/home/abe/font_dataset/png_6628_64x64/train.txt',
                              '/home/abe/font_dataset/png_6628_64x64/test.txt', 
-                             '/home/abe/font_dataset/png_selected_200_64x64/alph_list/all_A.txt')
+                             '/home/abe/font_dataset/png_selected_200_64x64/alph_list/all_A.txt',
+                             c_epoch_n=10, gan_epoch_n=10000, reject_n=6628)

@@ -94,7 +94,7 @@ def train(train_txt_path, test_txt_path, dst_dir_path, is_save_temp=True, last_m
 
 
 
-def classify(src_png_path, classifier):
+def classify(src_png_path, classifier, hdf5_path='/home/abe/dcgan_font/trained_model/classificator_alex.hdf5', is_disp=True):
     '''
     クラス分別の実行
     Args:
@@ -103,36 +103,38 @@ def classify(src_png_path, classifier):
     Return:
         predict_label:  分別されたラベル(クラスID)
     '''
+    serializers.load_hdf5(hdf5_path, classifier)
+    classifier_l = L.Classifier(classifier)
     img = cv2.imread(src_png_path, -1)
     img = img.astype(np.float32)
     img /= 255
     img = img[np.newaxis, np.newaxis, :, :]
     x = Variable(img)
-    y = classifier.predictor(x)
+    y = classifier_l.predictor(x)
     max_score = 0
     for i, score in enumerate(y.data[0]):
         if score > max_score:
             max_score = score
             predict_label = i
+    if is_disp:
+        print (sum_score, y.data[0], predict_label)
     return predict_label
 
 
 def output_accuracy_rate(img_paths, labels, 
-                         model=models.Classifier_AlexNet(), 
+                         classifier=models.Classifier_AlexNet(), 
                          hdf5_path='/home/abe/dcgan_font/classificator_alex.hdf5'):
     '''
     正解率の出力
     Args:
         img_paths:      対象の画像のパス
         labels:         対象の画像の正解ラベル
-        model:          Classifierのモデルの構造(models.pyのクラス)
+        classifier:          Classifierのモデルの構造(models.pyのクラス)
         hdf5_path:      Classifierの学習済みモデルのパス
     '''
-    serializers.load_hdf5(hdf5_path, model)
-    classifier = L.Classifier(model)
     correct_n = 0
     for img_path, label in zip(img_paths, labels):
-        if label == classify(img_path, classifier):
+        if label == classify(img_path, classifier, hdf5_path):
             print(img_path, '正解')
             correct_n += 1
         else:
@@ -150,15 +152,15 @@ def debug():
     # classify
     # print (classify('/home/abe/font_dataset/png_6628_64x64/B/3239.png'))
     # output_accuracy_rate
-    path_tmp1 = '/home/abe/dcgan_font/output_storage/forPRMU/CNN_Test/plusclassifier/'
-    img_paths, labels = [], []
-    for alph in ['A', 'B', 'C', 'D']:
-        path_tmp2 = path_tmp1 + alph + '_'
-        for i in range(2500):
-            img_path = path_tmp2 + str(i) + '.png'
-            img_paths.append(img_path)
-            labels.append(ord(alph) - 65)
-    output_accuracy_rate(img_paths, labels)
+    # path_tmp1 = '/home/abe/dcgan_font/output_storage/forPRMU/CNN_Test/plusclassifier/'
+    # img_paths, labels = [], []
+    # for alph in ['A', 'B', 'C', 'D']:
+    #     path_tmp2 = path_tmp1 + alph + '_'
+    #     for i in range(2500):
+    #         img_path = path_tmp2 + str(i) + '.png'
+    #         img_paths.append(img_path)
+    #         labels.append(ord(alph) - 65)
+    classify('/home/abe/dcgan_font/cdg/9/0.png', models.Classifier_AlexNet())
 
 
 if __name__ == '__main__':
