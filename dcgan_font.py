@@ -268,8 +268,8 @@ def debug():
     train(
         train_txt_path='/home/abe/font_dataset/png_selected_200_64x64/alph_list/all_A.txt',
         dst_dir_path=tools.make_date_dir('/home/abe/dcgan_font/output_storage/debug/'),
-        # generator=models.Generator_ThreeLayers(z_size=50),
-        # discriminator=models.Discriminator_ThreeLayers(),
+        generator=models.Generator_ThreeLayers(z_size=50),
+        discriminator=models.Discriminator_ThreeLayers(),
         classifier=models.Classifier_AlexNet(class_n=26),
         classifier_hdf5_path='/home/abe/dcgan_font/trained_model/classificator_alex.hdf5',
         classifier_weight=0.01,

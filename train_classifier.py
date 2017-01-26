@@ -28,8 +28,7 @@ def train(train_txt_path, test_txt_path, dst_dir_path, is_save_temp=True, last_m
                                     /home/hoge/font/B/0.png, 1
                                     /home/hoge/font/C/0.png, 2
                                     /home/hoge/2.png, 0
-        test_txt_path:          テストに用いる画像のパスを記載したtxt．
-                                フォーマットはtrain_txt_pathと同じ．
+        test_txt_path:          テストに用いる画像のパスを記載したtxt． フォーマットはtrain_txt_pathと同じ．
         dst_dir_path:           学習済みモデルの出力先．
         epoch_n:                学習回数．
         batch_size:             バッチサイズ．
@@ -117,7 +116,7 @@ def classify(src_png_path, classifier, hdf5_path='/home/abe/dcgan_font/trained_m
             max_score = score
             predict_label = i
     if is_disp:
-        print (sum_score, y.data[0], predict_label)
+        print (y.data[0], predict_label)
     return predict_label
 
 
@@ -129,7 +128,7 @@ def output_accuracy_rate(img_paths, labels,
     Args:
         img_paths:      対象の画像のパス
         labels:         対象の画像の正解ラベル
-        classifier:          Classifierのモデルの構造(models.pyのクラス)
+        classifier:     Classifierのモデルの構造(models.pyのクラス)
         hdf5_path:      Classifierの学習済みモデルのパス
     '''
     correct_n = 0
@@ -145,10 +144,10 @@ def output_accuracy_rate(img_paths, labels,
 
 def debug():
     # # train
-    # train_txt_path = '/home/abe/font_dataset/png_6628_64x64/train_noise.txt'
-    # test_txt_path = '/home/abe/font_dataset/png_6628_64x64/test_noise.txt'
-    # dst_dir_path = tools.make_date_dir('/home/abe/dcgan_font/output_classificator/debug/')
-    # train(train_txt_path, test_txt_path, dst_dir_path, model=models.Classifier(noise=True))
+    # train_txt_path = '/home/abe/font_dataset/png_6628_64x64/train.txt'
+    # test_txt_path = '/home/abe/font_dataset/png_6628_64x64/test.txt'
+    # dst_dir_path = tools.make_date_dir('/home/abe/dcgan_font/output/output_classifier_new/')
+    # train(train_txt_path, test_txt_path, dst_dir_path, model=models.Classifier_AlexNet())
     # classify
     # print (classify('/home/abe/font_dataset/png_6628_64x64/B/3239.png'))
     # output_accuracy_rate
@@ -160,7 +159,7 @@ def debug():
     #         img_path = path_tmp2 + str(i) + '.png'
     #         img_paths.append(img_path)
     #         labels.append(ord(alph) - 65)
-    classify('/home/abe/dcgan_font/cdg/9/0.png', models.Classifier_AlexNet())
+    classify('/home/abe/dcgan_font/cdg/8/0.png', models.Classifier_AlexNet())
 
 
 if __name__ == '__main__':

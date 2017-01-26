@@ -344,7 +344,7 @@ class Classifier_AlexNet(chainer.Chain):
         h = F.max_pooling_2d(F.relu(self.conv5(h)), 3, stride=2)
         h = F.dropout(F.relu(self.fc6(h)), train=train)
         h = F.dropout(F.relu(self.fc7(h)), train=train)
-        y = self.fc8(h)
+        y = F.softmax(self.fc8(h))
         return y
 
 
