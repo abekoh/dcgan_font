@@ -17,12 +17,18 @@ def save_list_include_reject_png_path(dst_dir_path, train_txt_path, test_txt_pat
         while line:
             test_txt_lines.append(line)
             line = test_txt_file.readline()
-    for img_i in range(img_n):
-        path = reject_png_dir_path + str(img_i) + '.png 26\n'
-        if img_i % 10 == 0:
-            test_txt_lines.append(path)
-        else:   
-            train_txt_lines.append(path)
+    # for img_i in range(img_n):
+    #     path = reject_png_dir_path + str(img_i) + '.png 26\n'
+    #     if img_i % 10 == 0:
+    #         test_txt_lines.append(path)
+    #     else:   
+    #         train_txt_lines.append(path)
+    reject_png_paths = tools.get_filepaths(reject_png_dir_path, '*.png')
+    for (i, png_path) in enumerate(reject_png_paths):
+        if i % 10 == 0:
+            test_txt_lines.append(png_path + ' 26\n')
+        else:
+            train_txt_lines.append(png_path + ' 26\n')
     random.shuffle(train_txt_lines)
     random.shuffle(test_txt_lines)
     with open(dst_dir_path + 'train_' + str(epoch_i) + '.txt', 'w') as new_train_txt_path:
@@ -33,7 +39,8 @@ def save_list_include_reject_png_path(dst_dir_path, train_txt_path, test_txt_pat
             new_test_txt_path.write(line)
 
 
-def train_cdg(dst_dir_path, default_train_all_txt_path, default_test_all_txt_path, train_A_txt_path, epoch_n=10, c_epoch_n=1, gan_epoch_n=2, reject_n=100):
+def train_cdg(dst_dir_path, default_train_all_txt_path, default_test_all_txt_path, train_A_txt_path, 
+              epoch_n=10, c_epoch_n=10, gan_epoch_n=10001, reject_n=10000):
     '''
     Classifierを含めて学習
         まずClassifierを学習し，それに基づきDCGANを学習．
@@ -54,10 +61,11 @@ def train_cdg(dst_dir_path, default_train_all_txt_path, default_test_all_txt_pat
                          classifier=models.Classifier_AlexNet(class_n=27), 
                          classifier_hdf5_path=dst_dir_path + 'model_last_' + str(epoch_i) + '.hdf5',
                          classifier_weight=0.01, model_filename=str(epoch_i), is_save_pic=False, 
-                         epoch_n=gan_epoch_n, gpu_device=0, save_models_interval=100000)
-        dcgan_font.generate(dst_dir_path=tools.make_dir(dst_dir_path + str(epoch_i)),
-                            generator_hdf5_path=dst_dir_path + str(epoch_i) + '_model_gen_' + str(gan_epoch_n - 1) + '.hdf5',
-                            img_name='', img_num=reject_n, img_font_num=1)
+                         epoch_n=gan_epoch_n, gpu_device=0, save_models_interval=1000)
+        for i in range(0, 10000, 1000):
+            dcgan_font.generate(dst_dir_path=tools.make_dir(dst_dir_path + str(epoch_i)),
+                                generator_hdf5_path=dst_dir_path + str(epoch_i) + '_model_gen_' + str(i) + '.hdf5',
+                                img_name=str(i), img_num=int(reject_n/10), img_font_num=1)
         save_list_include_reject_png_path(dst_dir_path=dst_dir_path,
                                           train_txt_path=train_all_txt_path, 
                                           test_txt_path=test_all_txt_path,
@@ -67,7 +75,7 @@ def train_cdg(dst_dir_path, default_train_all_txt_path, default_test_all_txt_pat
         test_all_txt_path = dst_dir_path + 'test_' +  str(epoch_i) + '.txt'
 
 if __name__ == '__main__':
-    train_cdg(tools.make_dir('/home/abe/dcgan_font/cdg/'), '/home/abe/font_dataset/png_6628_64x64/train.txt',
+    train_cdg(tools.make_dir('/home/abe/dcgan_font/output_storage/cdg2/'), '/home/abe/font_dataset/png_6628_64x64/train.txt',
                              '/home/abe/font_dataset/png_6628_64x64/test.txt', 
-                             '/home/abe/font_dataset/png_selected_200_64x64/alph_list/all_A.txt',
-                             c_epoch_n=10, gan_epoch_n=10000, reject_n=6628)
+                             '/home/abe/font_dataset/png_selected_200_64x64/alph_list/all_A.txt')
+                             # c_epoch_n=1, gan_epoch_n=1, reject_n=10)

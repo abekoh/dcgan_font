@@ -205,7 +205,8 @@ def train(train_txt_path, dst_dir_path,
                                                         epoch_i, batch_i), combined_img)
             sp.view()
         # 学習済みモデルの保存(0回目は保存しない，最後は保存する)
-        if (epoch_i % save_models_interval == 0 and epoch_i != 0) or epoch_i == epoch_n - 1:
+        # if (epoch_i % save_models_interval == 0 and epoch_i != 0) or epoch_i == epoch_n - 1:
+        if epoch_i % save_models_interval == 0:
             serializers.save_hdf5("{0}{1}_model_dis_{2}.hdf5".format(
                 dst_dir_path, model_filename, epoch_i), discriminator)
             serializers.save_hdf5("{0}{1}_model_gen_{2}.hdf5".format(
