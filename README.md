@@ -1,6 +1,8 @@
 # dcgan_font
 DCGANを用いてフォントを生成する試み．
 
+**2017年2月のPRMUで発表しました  
+http://www.ieice.org/ken/paper/20170219MbQr/**
 ## 特徴
 DCGANに文字を分類するCNNを組み込むことで，
 従来のより文字らしいフォントが生成されるようになる．
